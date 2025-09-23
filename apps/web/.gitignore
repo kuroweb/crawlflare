@@ -1,6 +1,5 @@
 # prod
-dist/
-dist-server/
+build/
 
 # dev
 .yarn/
