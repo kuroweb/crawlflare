@@ -38,7 +38,11 @@ export default defineConfig({
       adapter,
       entry,
       // Asset adjustment
-      exclude: [...defaultOptions.exclude, /\.(webp|png|svg)(\?.*)?$/],
+      exclude: [
+        ...defaultOptions.exclude,
+        /(\.webp|png|svg)(\?.*)?$/,
+        /\?import(\&.*)?$/, // development adjustment
+      ],
       // HMR adjustment
       handleHotUpdate: ({ server, modules }) => {
         const isServer = modules.some((mod) => {
