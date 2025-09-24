@@ -9,6 +9,7 @@
     "worker-configuration.d.ts"
   ],
   "compilerOptions": {
+    "checkJs": false,
     "composite": true,
     "strict": true,
     "lib": ["DOM", "DOM.Iterable", "ES2022"],

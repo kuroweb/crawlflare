@@ -14,6 +14,8 @@ build/
 # deps
 node_modules/
 .wrangler
+.react-router/
+*.tsbuildinfo
 
 # env
 .env
