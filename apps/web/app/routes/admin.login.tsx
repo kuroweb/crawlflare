@@ -1,33 +1,26 @@
 import {
   useActionData,
-  type ActionFunctionArgs,
   redirect,
   Form,
+  type ActionFunctionArgs,
 } from "react-router";
 
-import { sign } from "hono/jwt";
-import { createAdminTokenCookie } from "../lib/createAdminTokenCookie";
+import { createLoginCookie } from "../lib/createLoginCookie";
 
 export async function action({ request }: ActionFunctionArgs) {
+  const body = await request.formData();
+
+  // TODO: データベース上のユーザー情報と照合させる
   const id = "admin";
   const password = "admin";
-  const body = await request.formData();
   if (body.get("id") === id && body.get("password") === password) {
-    const token = await sign(
-      { exp: Math.round(Date.now() / 1000 + 60 * 60), data: { id } },
-      import.meta.env.VITE_ADMIN_JWT_SECRET,
-      "HS256"
-    );
+    const token = await createLoginCookie(id);
 
     return redirect("/admin", {
-      headers: {
-        "Set-Cookie": createAdminTokenCookie(token),
-      },
+      headers: { "Set-Cookie": token },
     });
   } else {
-    return {
-      errors: {},
-    };
+    return { errors: {} };
   }
 }
 
