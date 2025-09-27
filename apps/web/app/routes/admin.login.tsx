@@ -3,25 +3,39 @@ import {
   redirect,
   Form,
   type ActionFunctionArgs,
+  type AppLoadContext,
 } from "react-router";
 
 import { createLoginCookie } from "../lib/createLoginCookie";
 
-export async function action({ request }: ActionFunctionArgs) {
-  const body = await request.formData();
+export async function action({
+  request,
+  context,
+}: ActionFunctionArgs<AppLoadContext>) {
+  const form = await request.formData();
+  const inputId = String(form.get("id") || "").trim();
+  const inputPassword = String(form.get("password") || "").trim();
 
-  // TODO: データベース上のユーザー情報と照合させる
-  const id = "admin";
-  const password = "admin";
-  if (body.get("id") === id && body.get("password") === password) {
-    const token = await createLoginCookie(id);
-
-    return redirect("/admin", {
-      headers: { "Set-Cookie": token },
-    });
-  } else {
-    return { errors: {} };
+  if (!inputId || !inputPassword) {
+    return { errors: { message: "Missing inputs." } };
   }
+
+  // TODO: ORMを導入
+  const db = context.cloudflare.env.DB;
+
+  // TODO: passwordをハッシュ化
+  const result = await db
+    .prepare("SELECT id FROM users WHERE id = ? AND password = ?")
+    .bind(inputId, inputPassword)
+    .all<{ id: string }>();
+
+  const matched = Array.isArray(result.results) && result.results.length > 0;
+  if (!matched) {
+    return { errors: { message: "Invalid ID or Password" } };
+  }
+
+  const token = await createLoginCookie(inputId);
+  return redirect("/admin", { headers: { "Set-Cookie": token } });
 }
 
 export default function AdminLogin() {

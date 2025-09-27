@@ -4,6 +4,13 @@
   "compatibility_date": "2025-09-01",
   "compatibility_flags": ["nodejs_compat"],
   "main": "./workers/app.ts",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "crawlflare",
+      "database_id": "c357af15-cef3-4dc3-a46d-a251e461b8de"
+    }
+  ],
   "vars": {
     "VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare"
   },
