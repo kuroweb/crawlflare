@@ -7,6 +7,8 @@ import {
 } from "react-router";
 
 import { createLoginCookie } from "../lib/createLoginCookie";
+import { createDb } from "../db/client";
+import { verifyCredentials } from "~/models/users";
 
 export async function action({
   request,
@@ -20,17 +22,10 @@ export async function action({
     return { errors: { message: "Missing inputs." } };
   }
 
-  // TODO: ORMを導入
-  const db = context.cloudflare.env.DB;
+  const db = createDb(context.cloudflare.env);
 
-  // TODO: passwordをハッシュ化
-  const result = await db
-    .prepare("SELECT id FROM users WHERE id = ? AND password = ?")
-    .bind(inputId, inputPassword)
-    .all<{ id: string }>();
-
-  const matched = Array.isArray(result.results) && result.results.length > 0;
-  if (!matched) {
+  const ok = await verifyCredentials(db, inputId, inputPassword);
+  if (!ok) {
     return { errors: { message: "Invalid ID or Password" } };
   }
 
