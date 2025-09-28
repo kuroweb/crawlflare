@@ -34,7 +34,10 @@ export async function action({
     return { errors: { message: "Invalid ID or Password" } };
   }
 
-  const token = await createLoginCookie(inputId);
+  const token = await createLoginCookie(
+    inputId,
+    context.cloudflare.env.LOGIN_JWT_SECRET
+  );
   return redirect("/admin", { headers: { "Set-Cookie": token } });
 }
 
