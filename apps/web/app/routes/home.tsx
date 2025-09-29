@@ -1,5 +1,6 @@
 import type { Route } from "./+types/home";
 import { Welcome } from "../welcome/welcome";
+import Layout from "../components/layouts/Layout";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -13,5 +14,11 @@ export function loader({ context }: Route.LoaderArgs) {
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  return <Welcome message={loaderData.message} />;
+  return (
+    <>
+      <Layout>
+        <Welcome message={loaderData.message} />
+      </Layout>
+    </>
+  );
 }

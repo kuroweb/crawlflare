@@ -2,6 +2,7 @@ import { redirect, type LoaderFunctionArgs } from "react-router";
 import { verify } from "hono/jwt";
 import { LOGIN_COOKIE_NAME } from "~/lib/createLoginCookie";
 import { getCookieValue } from "~/lib/getCookieValue";
+import Layout from "~/components/layouts/Layout";
 
 export async function loader({ request, context }: LoaderFunctionArgs) {
   const cookieHeader = request.headers.get("Cookie");
@@ -19,8 +20,10 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
 
 export default function Admin() {
   return (
-    <div>
-      <h1>Admin Page</h1>
-    </div>
+    <>
+      <Layout>
+        <h1>Admin Page</h1>
+      </Layout>
+    </>
   );
 }

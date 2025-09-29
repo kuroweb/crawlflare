@@ -9,6 +9,7 @@ import {
 import { createLoginCookie } from "../lib/createLoginCookie";
 import { createDb } from "../db/client";
 import { verifyCredentials } from "~/models/users";
+import Layout from "~/components/layouts/Layout";
 
 export async function action({
   request,
@@ -40,11 +41,15 @@ export default function AdminLogin() {
   const data = useActionData();
 
   return (
-    <Form method="post">
-      <input type="text" name="id" placeholder="ID" />
-      <input type="password" name="password" placeholder="Password" />
-      <button type="submit">Login</button>
-      {data?.errors && <p>Invalid ID or Password</p>}
-    </Form>
+    <>
+      <Layout>
+        <Form method="post">
+          <input type="text" name="id" placeholder="ID" />
+          <input type="password" name="password" placeholder="Password" />
+          <button type="submit">Login</button>
+          {data?.errors && <p>Invalid ID or Password</p>}
+        </Form>
+      </Layout>
+    </>
   );
 }
