@@ -59,4 +59,6 @@ export default defineConfig({
     tsconfigPaths(),
   ],
   experimental: { enableNativePlugin: true },
+  // NOTE: daisyuiをapp.cssでロードするとnpm run buildでlightningcssのwarningが出るので、回避策としてesbuildでminifyしている
+  build: { cssMinify: "esbuild" },
 });
