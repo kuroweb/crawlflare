@@ -1,6 +1,4 @@
-LOGIN_JWT_SECRET=''
-BASIC_AUTH_USER=''
-BASIC_AUTH_PASS=''
+# npm run db:migrate:*, db:studio:* の実行用
 CLOUDFLARE_ACCOUNT_ID=''
 CLOUDFLARE_D1_DB_ID=''
 CLOUDFLARE_API_TOKEN=''
