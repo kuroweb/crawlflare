@@ -1,19 +1,10 @@
 import { redirect, type LoaderFunctionArgs } from "react-router";
-import { verify } from "hono/jwt";
-import { LOGIN_COOKIE_NAME } from "~/lib/createLoginCookie";
-import { getCookieValue } from "~/lib/getCookieValue";
+import { isAuthenticated } from "~/lib/isAuthenticated";
 import Layout from "~/components/layouts/Layout";
 
-export async function loader({ request, context }: LoaderFunctionArgs) {
-  const cookieHeader = request.headers.get("Cookie");
-  const token = getCookieValue(cookieHeader, LOGIN_COOKIE_NAME);
-  if (!token) return redirect("/admin/login");
-
-  try {
-    await verify(token, context.cloudflare.env.LOGIN_JWT_SECRET);
-  } catch (_) {
-    return redirect("/admin/login");
-  }
+export async function loader(args: LoaderFunctionArgs) {
+  const authenticated = await isAuthenticated(args);
+  if (!authenticated) return redirect("/admin/login");
 
   return {};
 }

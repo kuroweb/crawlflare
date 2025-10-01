@@ -1,6 +1,8 @@
 import type { Route } from "./+types/home";
 import { Welcome } from "../welcome/welcome";
 import Layout from "../components/layouts/Layout";
+import { isAuthenticated } from "~/lib/isAuthenticated";
+import { redirect, type LoaderFunctionArgs } from "react-router";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -9,8 +11,11 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-export function loader({ context }: Route.LoaderArgs) {
-  return { message: context.cloudflare.env.VALUE_FROM_CLOUDFLARE };
+export async function loader(args: LoaderFunctionArgs) {
+  const authenticated = await isAuthenticated(args);
+  if (!authenticated) return redirect("/admin/login");
+
+  return { message: args.context.cloudflare.env.VALUE_FROM_CLOUDFLARE };
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
