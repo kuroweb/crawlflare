@@ -15,13 +15,16 @@ export async function loader(args: LoaderFunctionArgs) {
   const authenticated = await isAuthenticated(args);
   if (!authenticated) return redirect("/admin/login");
 
-  return { message: args.context.cloudflare.env.VALUE_FROM_CLOUDFLARE };
+  return {
+    message: args.context.cloudflare.env.VALUE_FROM_CLOUDFLARE,
+    authenticated,
+  };
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
   return (
     <>
-      <Layout>
+      <Layout authenticated={loaderData.authenticated}>
         <Welcome message={loaderData.message} />
       </Layout>
     </>

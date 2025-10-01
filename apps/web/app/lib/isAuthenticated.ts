@@ -1,6 +1,6 @@
 import { type LoaderFunctionArgs } from "react-router";
 import { verify } from "hono/jwt";
-import { LOGIN_COOKIE_NAME } from "~/lib/createLoginCookie";
+import { LOGIN_COOKIE_NAME } from "~/lib/login";
 import { getCookieValue } from "~/lib/getCookieValue";
 
 export async function isAuthenticated({

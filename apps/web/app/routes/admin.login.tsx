@@ -2,13 +2,16 @@ import {
   useActionData,
   redirect,
   Form,
+  useLoaderData,
   type ActionFunctionArgs,
   type AppLoadContext,
+  type LoaderFunctionArgs,
 } from "react-router";
 
-import { createLoginCookie } from "../lib/createLoginCookie";
+import { createLoginCookie } from "../lib/login";
 import { createDb } from "../db/client";
 import { verifyCredentials } from "~/models/users";
+import { isAuthenticated } from "~/lib/isAuthenticated";
 import Layout from "~/components/layouts/Layout";
 
 export async function action({
@@ -34,15 +37,21 @@ export async function action({
     inputId,
     context.cloudflare.env.LOGIN_JWT_SECRET
   );
-  return redirect("/admin", { headers: { "Set-Cookie": token } });
+  return redirect("/", { headers: { "Set-Cookie": token } });
+}
+
+export async function loader(args: LoaderFunctionArgs) {
+  const authenticated = await isAuthenticated(args);
+  return { authenticated };
 }
 
 export default function AdminLogin() {
   const data = useActionData();
+  const { authenticated } = useLoaderData<typeof loader>();
 
   return (
     <>
-      <Layout>
+      <Layout authenticated={authenticated}>
         <Form method="post">
           <input type="text" name="id" placeholder="ID" />
           <input type="password" name="password" placeholder="Password" />

@@ -13,6 +13,10 @@ export async function findUserById(
   return rows[0] ?? null;
 }
 
+export async function getAllUsers(db: Database): Promise<User[]> {
+  return await db.select().from(users);
+}
+
 export async function verifyCredentials(
   db: Database,
   id: string,
