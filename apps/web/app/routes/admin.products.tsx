@@ -14,7 +14,7 @@ export async function loader(args: LoaderFunctionArgs) {
   return { users, authenticated };
 }
 
-export default function Admin() {
+export default function AdminProducts() {
   const { users, authenticated } = useLoaderData<typeof loader>();
 
   return (
@@ -23,11 +23,12 @@ export default function Admin() {
         <div className="grid grid-cols-1 gap-4">
           <div className="card w-full bg-base-200">
             <div className="card-body">
-              <h2 className="card-title">ユーザー管理</h2>
+              <h2 className="card-title">計測管理</h2>
               <table className="table">
                 <thead>
                   <tr>
                     <th>id</th>
+                    <th>email</th>
                     <th>created_at</th>
                     <th>updated_at</th>
                     <th>操作</th>
@@ -38,6 +39,9 @@ export default function Admin() {
                     <tr key={user.id} className="">
                       <td>
                         <div className="font-mono text-sm">{user.id}</div>
+                      </td>
+                      <td>
+                        <div className="font-mono text-sm">{user.email}</div>
                       </td>
                       <td>
                         <div className="text-sm">

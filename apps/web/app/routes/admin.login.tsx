@@ -19,22 +19,22 @@ export async function action({
   context,
 }: ActionFunctionArgs<AppLoadContext>) {
   const form = await request.formData();
-  const inputId = String(form.get("id") || "").trim();
+  const inputEmail = String(form.get("email") || "").trim();
   const inputPassword = String(form.get("password") || "").trim();
 
-  if (!inputId || !inputPassword) {
+  if (!inputEmail || !inputPassword) {
     return { errors: { message: "Missing inputs." } };
   }
 
   const db = createDb(context.cloudflare.env);
 
-  const ok = await verifyCredentials(db, inputId, inputPassword);
+  const ok = await verifyCredentials(db, inputEmail, inputPassword);
   if (!ok) {
-    return { errors: { message: "Invalid ID or Password" } };
+    return { errors: { message: "Invalid Email or Password" } };
   }
 
   const token = await createLoginCookie(
-    inputId,
+    inputEmail,
     context.cloudflare.env.LOGIN_JWT_SECRET
   );
   return redirect("/", { headers: { "Set-Cookie": token } });
@@ -53,10 +53,10 @@ export default function AdminLogin() {
     <>
       <Layout authenticated={authenticated}>
         <Form method="post">
-          <input type="text" name="id" placeholder="ID" />
+          <input type="text" name="email" placeholder="Email" />
           <input type="password" name="password" placeholder="Password" />
           <button type="submit">Login</button>
-          {data?.errors && <p>Invalid ID or Password</p>}
+          {data?.errors && <p>Invalid Email or Password</p>}
         </Form>
       </Layout>
     </>

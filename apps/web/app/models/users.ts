@@ -5,11 +5,11 @@ import type { InferSelectModel } from "drizzle-orm";
 
 export type User = InferSelectModel<typeof users>;
 
-export async function findUserById(
+export async function findUserByEmail(
   db: Database,
-  id: string
+  email: string
 ): Promise<User | null> {
-  const rows = await db.select().from(users).where(eq(users.id, id)).limit(1);
+  const rows = await db.select().from(users).where(eq(users.email, email)).limit(1);
   return rows[0] ?? null;
 }
 
@@ -19,13 +19,13 @@ export async function getAllUsers(db: Database): Promise<User[]> {
 
 export async function verifyCredentials(
   db: Database,
-  id: string,
+  email: string,
   password: string
 ): Promise<boolean> {
   const rows = await db
-    .select({ id: users.id, password: users.password })
+    .select({ email: users.email, password: users.password })
     .from(users)
-    .where(eq(users.id, id))
+    .where(eq(users.email, email))
     .limit(1);
 
   rows.length !== 0;

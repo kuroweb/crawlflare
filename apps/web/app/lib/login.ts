@@ -5,14 +5,14 @@ import { sign } from "hono/jwt";
 export const LOGIN_COOKIE_NAME = "login-token";
 
 export async function createLoginCookie(
-  id: string,
+  email: string,
   jwtSecret: string
 ): Promise<string> {
   // 有効期限
   const JWT_EXP = Math.floor(Date.now() / 1000) + 60 * 60 * 24; // 24時間
   const COOKIE_MAX_AGE = 60 * 60 * 24; // 24時間
 
-  const token = await sign({ exp: JWT_EXP, data: { id } }, jwtSecret, "HS256");
+  const token = await sign({ exp: JWT_EXP, data: { email } }, jwtSecret, "HS256");
 
   return generateCookie(LOGIN_COOKIE_NAME, token, {
     maxAge: COOKIE_MAX_AGE,
