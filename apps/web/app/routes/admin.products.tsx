@@ -6,9 +6,24 @@ import {
 } from "react-router";
 import { isAuthenticated } from "~/lib/isAuthenticated";
 import Layout from "~/components/layouts/Layout";
-import { getAllProducts } from "~/models/products";
-import { createDb } from "~/db/client";
+import { getAllProducts } from "../../models/products";
+import { createDb } from "db/client";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import MercariForm from "~/features/products/components/createProductModal/MercariForm";
+
+// フォームの型定義（schema.tsに合わせて修正）
+type ProductFormData = {
+  name: string; // productsテーブルのnameフィールド
+  // メルカリ設定のみ
+  mercariSettings?: {
+    keyword: string;
+    categoryId?: number; // integer型に変更
+    minPrice: number; // デフォルト値0、必須
+    maxPrice: number; // デフォルト値0、必須
+    enabled: boolean; // デフォルト値false、必須
+  };
+};
 
 export async function loader(args: LoaderFunctionArgs) {
   const authenticated = await isAuthenticated(args);
@@ -23,7 +38,57 @@ export async function loader(args: LoaderFunctionArgs) {
 export default function AdminProducts() {
   const { products, authenticated } = useLoaderData<typeof loader>();
   const [modal, setModal] = useState<boolean>(false);
-  const [tab, setTab] = useState<string | null>("メルカリ");
+
+  // react-hook-formの設定
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<ProductFormData>({
+    defaultValues: {
+      name: "",
+      mercariSettings: {
+        keyword: "",
+        categoryId: undefined,
+        minPrice: 0,
+        maxPrice: 0,
+        enabled: false,
+      },
+    },
+    mode: "onChange", // リアルタイムバリデーション
+  });
+
+  // フォーム送信処理
+  const onSubmit = async (data: ProductFormData) => {
+    try {
+      const response = await fetch("/api/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log("Product created successfully:", result);
+        // 成功時の処理
+        setModal(false);
+        // ページをリロードして新しいデータを取得
+        window.location.reload();
+      } else {
+        const errorData = (await response.json()) as { error?: string };
+        console.error("Failed to create product:", errorData);
+        alert(`エラー: ${errorData.error || "商品の作成に失敗しました"}`);
+      }
+    } catch (error) {
+      console.error("Error creating product:", error);
+      alert("ネットワークエラーが発生しました。もう一度お試しください。");
+    }
+  };
 
   return (
     <>
@@ -55,133 +120,41 @@ export default function AdminProducts() {
                     ✕
                   </div>
                   <h3 className="text-lg font-bold">計測設定を追加</h3>
-                  <form onSubmit={() => {}}>
+                  <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="divider pt-4">共通設定</div>
                     <fieldset className="fieldset">
-                      <legend className="fieldset-legend">管理コード</legend>
-                      <input className="input w-full"></input>
+                      <legend className="fieldset-legend">商品名</legend>
+                      <input
+                        className="input w-full"
+                        {...register("name", {
+                          required: "商品名は必須です",
+                          minLength: {
+                            value: 2,
+                            message: "商品名は2文字以上である必要があります",
+                          },
+                          maxLength: {
+                            value: 100,
+                            message: "商品名は100文字以下である必要があります",
+                          },
+                        })}
+                        placeholder="例: iPhone 15 Pro Max"
+                      />
+                      {errors.name && (
+                        <p className="text-error text-sm mt-1">
+                          {errors.name.message}
+                        </p>
+                      )}
                     </fieldset>
-                    <div className="divider py-6">詳細設定</div>
-                    <div className="join flex pb-2">
-                      <input
-                        className="btn join-item btn-md w-1/3"
-                        type="radio"
-                        name="options"
-                        aria-label="メルカリ"
-                        checked={tab === "メルカリ"}
-                        onClick={() => {
-                          setTab("メルカリ");
-                        }}
-                      />
-                      <input
-                        className="btn join-item btn-md w-1/3"
-                        type="radio"
-                        name="options"
-                        aria-label="ヤフオク"
-                        checked={tab === "ヤフオク"}
-                        onClick={() => {
-                          setTab("ヤフオク");
-                        }}
-                      />
-                      <input
-                        className="btn join-item btn-md w-1/3"
-                        type="radio"
-                        name="options"
-                        aria-label="じゃんぱら"
-                        checked={tab === "じゃんぱら"}
-                        onClick={() => {
-                          setTab("じゃんぱら");
-                        }}
-                      />
-                    </div>
-                    <div className="join flex">
-                      <input
-                        className="btn join-item btn-md w-1/3"
-                        type="radio"
-                        name="options"
-                        aria-label="イオシス"
-                        checked={tab === "イオシス"}
-                        onClick={() => {
-                          setTab("イオシス");
-                        }}
-                      />
-                      <input
-                        className="btn join-item btn-md w-1/3"
-                        type="radio"
-                        name="options"
-                        aria-label="パソコン工房"
-                        checked={tab === "パソコン工房"}
-                        onClick={() => {
-                          setTab("パソコン工房");
-                        }}
-                      />
-                      <input
-                        className="btn join-item btn-md w-1/3"
-                        type="radio"
-                        name="options"
-                        aria-label="リコレ"
-                        checked={tab === "リコレ"}
-                        onClick={() => {
-                          setTab("リコレ");
-                        }}
-                      />
-                    </div>
+                    <div className="divider py-6">メルカリ設定</div>
                     <div>
-                      {tab === null ||
-                        (tab === "メルカリ" && (
-                          <div className="py-4">
-                            {/* <MercariForm
-                            register={register}
-                            getValues={getValues}
-                            setValue={setValue}
-                          /> */}
-                          </div>
-                        ))}
-                      {tab === "ヤフオク" && (
-                        <div className="py-4">
-                          {/* <YahooAuctionForm
-                            register={register}
-                            getValues={getValues}
-                            setValue={setValue}
-                          /> */}
-                        </div>
-                      )}
-                      {tab === "じゃんぱら" && (
-                        <div className="py-4">
-                          {/* <JanparaForm
-                            register={register}
-                            getValues={getValues}
-                            setValue={setValue}
-                          /> */}
-                        </div>
-                      )}
-                      {tab === "イオシス" && (
-                        <div className="py-4">
-                          {/* <IosysForm
-                            register={register}
-                            getValues={getValues}
-                            setValue={setValue}
-                          /> */}
-                        </div>
-                      )}
-                      {tab === "パソコン工房" && (
-                        <div className="py-4">
-                          {/* <PcKoubouForm
-                            register={register}
-                            getValues={getValues}
-                            setValue={setValue}
-                          /> */}
-                        </div>
-                      )}
-                      {tab === "リコレ" && (
-                        <div className="py-4">
-                          {/* <UsedSofmapForm
-                            register={register}
-                            getValues={getValues}
-                            setValue={setValue}
-                          /> */}
-                        </div>
-                      )}
+                      <div className="py-4">
+                        <MercariForm
+                          register={register}
+                          getValues={getValues}
+                          setValue={setValue}
+                          errors={errors}
+                        />
+                      </div>
                     </div>
                     <button type="submit" className="btn btn-primary w-full">
                       登録

@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "093be32c-1822-4ba4-a955-bc4a09fb036a",
+  "id": "6e3eb260-66d4-4dbc-a542-de63c9afacd7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "mercari_crawl_settings": {
@@ -9,10 +9,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": true
         },
         "productId": {
           "name": "productId",
@@ -65,7 +65,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(CURRENT_TIME)"
+          "default": "(CURRENT_TIMESTAMP)"
         },
         "updatedAt": {
           "name": "updatedAt",
@@ -73,7 +73,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(CURRENT_TIME)"
+          "default": "(CURRENT_TIMESTAMP)"
         }
       },
       "indexes": {},
@@ -87,10 +87,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": true
         },
         "name": {
           "name": "name",
@@ -105,7 +105,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(CURRENT_TIME)"
+          "default": "(CURRENT_TIMESTAMP)"
         },
         "updatedAt": {
           "name": "updatedAt",
@@ -113,7 +113,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(CURRENT_TIME)"
+          "default": "(CURRENT_TIMESTAMP)"
         }
       },
       "indexes": {},
@@ -127,10 +127,10 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "integer",
           "primaryKey": true,
           "notNull": true,
-          "autoincrement": false
+          "autoincrement": true
         },
         "email": {
           "name": "email",
@@ -152,7 +152,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(CURRENT_TIME)"
+          "default": "(CURRENT_TIMESTAMP)"
         },
         "updatedAt": {
           "name": "updatedAt",
@@ -160,7 +160,7 @@
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
-          "default": "(CURRENT_TIME)"
+          "default": "(CURRENT_TIMESTAMP)"
         }
       },
       "indexes": {},

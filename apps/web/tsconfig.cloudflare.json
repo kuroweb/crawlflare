@@ -6,8 +6,10 @@
     "app/**/.server/**/*",
     "app/**/.client/**/*",
     "workers/**/*",
+    "models/**/*",
+    "db/**/*",
     "worker-configuration.d.ts"
-  ],
+, "db"  ],
   "compilerOptions": {
     "checkJs": false,
     "composite": true,

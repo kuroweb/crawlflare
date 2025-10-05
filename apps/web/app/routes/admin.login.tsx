@@ -9,8 +9,8 @@ import {
 } from "react-router";
 
 import { createLoginCookie } from "../lib/login";
-import { createDb } from "../db/client";
-import { verifyCredentials } from "~/models/users";
+import { createDb } from "../../db/client";
+import { verifyCredentials } from "models/users";
 import { isAuthenticated } from "~/lib/isAuthenticated";
 import Layout from "~/components/layouts/Layout";
 

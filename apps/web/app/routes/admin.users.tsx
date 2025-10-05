@@ -1,8 +1,8 @@
 import { redirect, type LoaderFunctionArgs, useLoaderData } from "react-router";
 import { isAuthenticated } from "~/lib/isAuthenticated";
 import Layout from "~/components/layouts/Layout";
-import { getAllUsers } from "~/models/users";
-import { createDb } from "~/db/client";
+import { getAllUsers } from "models/users";
+import { createDb } from "db/client";
 
 export async function loader(args: LoaderFunctionArgs) {
   const authenticated = await isAuthenticated(args);

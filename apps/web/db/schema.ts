@@ -2,28 +2,28 @@ import { sql } from "drizzle-orm";
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("users", {
-  id: text().primaryKey(),
+  id: integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
   email: text().notNull(),
   password: text().notNull(),
-  createdAt: text().default(sql`(CURRENT_TIME)`),
-  updatedAt: text().default(sql`(CURRENT_TIME)`),
+  createdAt: text().default(sql`(CURRENT_TIMESTAMP)`),
+  updatedAt: text().default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 export const products = sqliteTable("products", {
-  id: text().primaryKey(),
+  id: integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
   name: text().notNull(),
-  createdAt: text().default(sql`(CURRENT_TIME)`),
-  updatedAt: text().default(sql`(CURRENT_TIME)`),
+  createdAt: text().default(sql`(CURRENT_TIMESTAMP)`),
+  updatedAt: text().default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 export const mercariCrawlSettings = sqliteTable("mercari_crawl_settings", {
-  id: text().primaryKey(),
+  id: integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
   productId: integer({ mode: "number" }).notNull(),
   keyword: text().notNull(),
   categoryId: integer({ mode: "number" }),
   minPrice: integer({ mode: "number" }).notNull().default(0),
   maxPrice: integer({ mode: "number" }).notNull().default(0),
   enabled: integer({ mode: "boolean" }).notNull().default(false),
-  createdAt: text().default(sql`(CURRENT_TIME)`),
-  updatedAt: text().default(sql`(CURRENT_TIME)`),
+  createdAt: text().default(sql`(CURRENT_TIMESTAMP)`),
+  updatedAt: text().default(sql`(CURRENT_TIMESTAMP)`),
 });
