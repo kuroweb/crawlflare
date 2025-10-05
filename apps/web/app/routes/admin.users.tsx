@@ -44,14 +44,10 @@ export default function AdminUsers() {
                         <div className="font-mono text-sm">{user.email}</div>
                       </td>
                       <td>
-                        <div className="text-sm">
-                          {new Date(user.createdAt).toLocaleString("ja-JP")}
-                        </div>
+                        <div className="text-sm">{user.createdAt}</div>
                       </td>
                       <td>
-                        <div className="text-sm">
-                          {new Date(user.updatedAt).toLocaleString("ja-JP")}
-                        </div>
+                        <div className="text-sm">{user.updatedAt}</div>
                       </td>
                       <td className="w-1/12">
                         <div className="dropdown dropdown-left">

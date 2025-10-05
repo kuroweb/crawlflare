@@ -61,19 +61,6 @@ export default function AdminProducts() {
                       <legend className="fieldset-legend">管理コード</legend>
                       <input className="input w-full"></input>
                     </fieldset>
-                    <fieldset className="fieldset">
-                      <legend className="fieldset-legend">カテゴリ</legend>
-                      <select className="select w-full">
-                        <option>カテゴリ1</option>
-                        <option>カテゴリ2</option>
-                        <option>カテゴリ3</option>
-                        {/* {categories?.map((category) => (
-                          <option key={category.id} value={category.id}>
-                            {category.name}
-                          </option>
-                        ))} */}
-                      </select>
-                    </fieldset>
                     <div className="divider py-6">詳細設定</div>
                     <div className="join flex pb-2">
                       <input
@@ -223,14 +210,10 @@ export default function AdminProducts() {
                         <div className="font-mono text-sm">{product.name}</div>
                       </td>
                       <td>
-                        <div className="text-sm">
-                          {new Date(product.createdAt).toLocaleString("ja-JP")}
-                        </div>
+                        <div className="text-sm">{product.createdAt}</div>
                       </td>
                       <td>
-                        <div className="text-sm">
-                          {new Date(product.updatedAt).toLocaleString("ja-JP")}
-                        </div>
+                        <div className="text-sm">{product.updatedAt}</div>
                       </td>
                       <td className="w-1/12">
                         <div className="dropdown dropdown-left">
