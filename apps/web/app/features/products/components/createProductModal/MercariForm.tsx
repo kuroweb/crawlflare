@@ -4,17 +4,7 @@ import type {
   UseFormSetValue,
   FieldErrors,
 } from "react-hook-form";
-
-type ProductFormData = {
-  name: string;
-  mercariSettings?: {
-    keyword: string;
-    categoryId?: number;
-    minPrice: number;
-    maxPrice: number;
-    enabled: boolean;
-  };
-};
+import { type ProductFormData } from "~/lib/schemas";
 
 interface MercariFormProps {
   register: UseFormRegister<ProductFormData>;
@@ -35,9 +25,7 @@ export default function MercariForm({
         <legend className="fieldset-legend">検索キーワード</legend>
         <input
           className="input w-full"
-          {...register("mercariSettings.keyword", {
-            required: "検索キーワードは必須です",
-          })}
+          {...register("mercariSettings.keyword")}
           placeholder="例: iPhone 15"
         />
         {errors.mercariSettings?.keyword && (
@@ -53,7 +41,7 @@ export default function MercariForm({
           type="number"
           className="input w-full"
           {...register("mercariSettings.categoryId", {
-            min: { value: 0, message: "カテゴリIDは0以上である必要があります" },
+            valueAsNumber: true,
           })}
           placeholder="例: 1"
         />
@@ -71,8 +59,7 @@ export default function MercariForm({
             type="number"
             className="input w-full"
             {...register("mercariSettings.minPrice", {
-              required: "最低価格は必須です",
-              min: { value: 0, message: "価格は0円以上である必要があります" },
+              valueAsNumber: true,
             })}
             placeholder="例: 1000"
           />
@@ -89,8 +76,7 @@ export default function MercariForm({
             type="number"
             className="input w-full"
             {...register("mercariSettings.maxPrice", {
-              required: "最高価格は必須です",
-              min: { value: 0, message: "価格は0円以上である必要があります" },
+              valueAsNumber: true,
             })}
             placeholder="例: 50000"
           />

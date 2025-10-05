@@ -10,20 +10,9 @@ import { getAllProducts } from "../../models/products";
 import { createDb } from "db/client";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { productFormSchema, type ProductFormData } from "~/lib/schemas";
 import MercariForm from "~/features/products/components/createProductModal/MercariForm";
-
-// フォームの型定義（schema.tsに合わせて修正）
-type ProductFormData = {
-  name: string; // productsテーブルのnameフィールド
-  // メルカリ設定のみ
-  mercariSettings?: {
-    keyword: string;
-    categoryId?: number; // integer型に変更
-    minPrice: number; // デフォルト値0、必須
-    maxPrice: number; // デフォルト値0、必須
-    enabled: boolean; // デフォルト値false、必須
-  };
-};
 
 export async function loader(args: LoaderFunctionArgs) {
   const authenticated = await isAuthenticated(args);
@@ -39,26 +28,25 @@ export default function AdminProducts() {
   const { products, authenticated } = useLoaderData<typeof loader>();
   const [modal, setModal] = useState<boolean>(false);
 
-  // react-hook-formの設定
   const {
     register,
     handleSubmit,
     getValues,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<ProductFormData>({
+    resolver: zodResolver(productFormSchema),
     defaultValues: {
       name: "",
       mercariSettings: {
         keyword: "",
-        categoryId: undefined,
+        categoryId: null,
         minPrice: 0,
         maxPrice: 0,
         enabled: false,
       },
     },
-    mode: "onChange", // リアルタイムバリデーション
+    mode: "onChange",
   });
 
   // フォーム送信処理
@@ -75,9 +63,7 @@ export default function AdminProducts() {
       if (response.ok) {
         const result = await response.json();
         console.log("Product created successfully:", result);
-        // 成功時の処理
         setModal(false);
-        // ページをリロードして新しいデータを取得
         window.location.reload();
       } else {
         const errorData = (await response.json()) as { error?: string };
@@ -126,17 +112,7 @@ export default function AdminProducts() {
                       <legend className="fieldset-legend">商品名</legend>
                       <input
                         className="input w-full"
-                        {...register("name", {
-                          required: "商品名は必須です",
-                          minLength: {
-                            value: 2,
-                            message: "商品名は2文字以上である必要があります",
-                          },
-                          maxLength: {
-                            value: 100,
-                            message: "商品名は100文字以下である必要があります",
-                          },
-                        })}
+                        {...register("name")}
                         placeholder="例: iPhone 15 Pro Max"
                       />
                       {errors.name && (
