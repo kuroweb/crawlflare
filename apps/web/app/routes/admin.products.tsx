@@ -7,8 +7,8 @@ import {
 import { isAuthenticated } from "~/lib/isAuthenticated";
 import Layout from "~/components/layouts/Layout";
 import { useState } from "react";
-import CreateProductModal from "~/features/products/components/createProductModal/CreateProductModal";
-import UpdateProductModal from "~/features/products/components/createProductModal/UpdateProductModal";
+import CreateProductModal from "~/features/products/components/CreateProductModal";
+import UpdateProductModal from "~/features/products/components/UpdateProductModal";
 import { getApiBaseUrl } from "~/lib/api";
 
 export async function loader(args: LoaderFunctionArgs) {
