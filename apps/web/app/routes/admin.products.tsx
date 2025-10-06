@@ -2,35 +2,55 @@ import {
   redirect,
   type LoaderFunctionArgs,
   useLoaderData,
-  Link,
+  useNavigate,
 } from "react-router";
 import { isAuthenticated } from "~/lib/isAuthenticated";
 import Layout from "~/components/layouts/Layout";
-import { getAllProducts } from "../../models/products";
-import { createDb } from "db/client";
 import { useState } from "react";
 import CreateProductModal from "~/features/products/components/createProductModal/CreateProductModal";
+import { getApiBaseUrl } from "~/lib/api";
 
 export async function loader(args: LoaderFunctionArgs) {
   const authenticated = await isAuthenticated(args);
   if (!authenticated) return redirect("/admin/login");
 
-  const db = createDb(args.context.cloudflare.env);
-  const products = await getAllProducts(db);
+  try {
+    const apiBaseUrl = getApiBaseUrl(args.request);
+    const response = await fetch(`${apiBaseUrl}/api/products`, {
+      headers: {
+        Authorization: args.request.headers.get("Authorization") || "",
+      },
+    });
 
-  return { products, authenticated };
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`);
+    }
+
+    const apiResponse = (await response.json()) as {
+      success: boolean;
+      data: any[];
+    };
+    const products = apiResponse.data || [];
+
+    return { products, authenticated };
+  } catch (error) {
+    console.error("Error fetching products from API:", error);
+    return { products: [], authenticated };
+  }
 }
 
 export default function AdminProducts() {
   const { products, authenticated } = useLoaderData<typeof loader>();
   const [modal, setModal] = useState<boolean>(false);
+  const navigate = useNavigate();
 
   const handleModalClose = () => {
     setModal(false);
   };
 
   const handleSuccess = () => {
-    window.location.reload();
+    // ページを再読み込みして最新のデータを取得
+    navigate(".", { replace: true });
   };
 
   return (
@@ -61,7 +81,7 @@ export default function AdminProducts() {
                   </tr>
                 </thead>
                 <tbody>
-                  {products.map((product) => (
+                  {products.map((product: any) => (
                     <tr key={product.id} className="">
                       <td>
                         <div className="font-mono text-sm">{product.id}</div>

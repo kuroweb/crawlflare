@@ -1,17 +1,35 @@
 import { redirect, type LoaderFunctionArgs, useLoaderData } from "react-router";
 import { isAuthenticated } from "~/lib/isAuthenticated";
 import Layout from "~/components/layouts/Layout";
-import { getAllUsers } from "models/users";
-import { createDb } from "db/client";
+import { getApiBaseUrl } from "~/lib/api";
 
 export async function loader(args: LoaderFunctionArgs) {
   const authenticated = await isAuthenticated(args);
   if (!authenticated) return redirect("/admin/login");
 
-  const db = createDb(args.context.cloudflare.env);
-  const users = await getAllUsers(db);
+  try {
+    const apiBaseUrl = getApiBaseUrl(args.request);
+    const response = await fetch(`${apiBaseUrl}/api/users`, {
+      headers: {
+        Authorization: args.request.headers.get("Authorization") || "",
+      },
+    });
 
-  return { users, authenticated };
+    if (!response.ok) {
+      throw new Error(`API request failed: ${response.status}`);
+    }
+
+    const apiResponse = (await response.json()) as {
+      success: boolean;
+      data: any[];
+    };
+    const users = apiResponse.data || [];
+
+    return { users, authenticated };
+  } catch (error) {
+    console.error("Error fetching users from API:", error);
+    return { users: [], authenticated };
+  }
 }
 
 export default function AdminUsers() {
@@ -35,7 +53,7 @@ export default function AdminUsers() {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((user) => (
+                  {users.map((user: any) => (
                     <tr key={user.id} className="">
                       <td>
                         <div className="font-mono text-sm">{user.id}</div>

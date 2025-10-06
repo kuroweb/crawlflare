@@ -3,6 +3,7 @@ import { createDb } from "../../db/client";
 import {
   createProduct,
   createMercariCrawlSetting,
+  getAllProducts,
 } from "../../models/products";
 import {
   validateCreateProductRequest,
@@ -11,6 +12,23 @@ import {
 
 const productsRouter = new Hono<{ Bindings: Env }>();
 
+// GET: /api/products
+productsRouter.get("/", async (c) => {
+  try {
+    const db = createDb(c.env);
+    const products = await getAllProducts(db);
+
+    return c.json({
+      success: true,
+      data: products,
+    });
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return c.json({ error: "サーバーエラーが発生しました" }, 500);
+  }
+});
+
+// POST: /api/products
 productsRouter.post("/", async (c) => {
   try {
     const body = await c.req.json();
