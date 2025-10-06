@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { productFormSchema, type ProductFormData } from "~/lib/schemas";
@@ -36,7 +35,6 @@ export default function CreateProductModal({
     mode: "onChange",
   });
 
-  // フォーム送信処理
   const onSubmit = async (data: ProductFormData) => {
     try {
       const response = await fetch("/api/products", {
