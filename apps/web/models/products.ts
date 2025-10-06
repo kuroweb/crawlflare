@@ -6,8 +6,40 @@ import { eq } from "drizzle-orm";
 export type Product = InferSelectModel<typeof products>;
 export type MercariCrawlSetting = InferSelectModel<typeof mercariCrawlSettings>;
 
-export async function getAllProducts(db: Database): Promise<Product[]> {
-  return await db.select().from(products);
+export async function getAllProducts(
+  db: Database
+): Promise<(Product & { mercariSettings: MercariCrawlSetting | null })[]> {
+  const result = await db
+    .select({
+      id: products.id,
+      name: products.name,
+      createdAt: products.createdAt,
+      updatedAt: products.updatedAt,
+      mercariSettings: {
+        id: mercariCrawlSettings.id,
+        productId: mercariCrawlSettings.productId,
+        keyword: mercariCrawlSettings.keyword,
+        categoryId: mercariCrawlSettings.categoryId,
+        minPrice: mercariCrawlSettings.minPrice,
+        maxPrice: mercariCrawlSettings.maxPrice,
+        enabled: mercariCrawlSettings.enabled,
+        createdAt: mercariCrawlSettings.createdAt,
+        updatedAt: mercariCrawlSettings.updatedAt,
+      },
+    })
+    .from(products)
+    .leftJoin(
+      mercariCrawlSettings,
+      eq(products.id, mercariCrawlSettings.productId)
+    );
+
+  return result.map((row) => ({
+    id: row.id,
+    name: row.name,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    mercariSettings: row.mercariSettings?.id ? row.mercariSettings : null,
+  }));
 }
 
 export async function createProduct(
@@ -57,8 +89,15 @@ export async function updateProduct(
   id: number,
   data: {
     name: string;
+    mercariSettings?: {
+      keyword: string;
+      categoryId?: number;
+      minPrice: number;
+      maxPrice: number;
+      enabled: boolean;
+    };
   }
-): Promise<Product> {
+): Promise<Product & { mercariSettings: MercariCrawlSetting | null }> {
   const result = await db
     .update(products)
     .set({
@@ -68,7 +107,30 @@ export async function updateProduct(
     .where(eq(products.id, id))
     .returning();
 
-  return result[0];
+  const updatedProduct = result[0];
+
+  let mercariSettings: MercariCrawlSetting | null = null;
+  if (data.mercariSettings) {
+    const existingSetting = await getMercariCrawlSettingByProductId(db, id);
+
+    if (existingSetting) {
+      mercariSettings = await updateMercariCrawlSetting(
+        db,
+        id,
+        data.mercariSettings
+      );
+    } else {
+      mercariSettings = await createMercariCrawlSetting(db, {
+        productId: id,
+        ...data.mercariSettings,
+      });
+    }
+  }
+
+  return {
+    ...updatedProduct,
+    mercariSettings,
+  };
 }
 
 export async function updateMercariCrawlSetting(

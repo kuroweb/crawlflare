@@ -33,42 +33,7 @@ export async function loader(args: LoaderFunctionArgs) {
     };
     const products = apiResponse.data || [];
 
-    const productsWithSettings = await Promise.all(
-      products.map(async (product: any) => {
-        try {
-          const settingsResponse = await fetch(
-            `${apiBaseUrl}/api/products/${product.id}/mercari_settings`,
-            {
-              headers: {
-                Authorization: args.request.headers.get("Authorization") || "",
-              },
-            }
-          );
-
-          if (settingsResponse.ok) {
-            const settingsData = (await settingsResponse.json()) as {
-              data: any;
-            };
-            return {
-              ...product,
-              mercariSettings: settingsData.data || null,
-            };
-          }
-        } catch (error) {
-          console.error(
-            `Error fetching mercari settings for product ${product.id}:`,
-            error
-          );
-        }
-
-        return {
-          ...product,
-          mercariSettings: null,
-        };
-      })
-    );
-
-    return { products: productsWithSettings, authenticated };
+    return { products, authenticated };
   } catch (error) {
     console.error("Error fetching products from API:", error);
     return { products: [], authenticated };

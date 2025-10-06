@@ -5,9 +5,7 @@ import {
   createMercariCrawlSetting,
   getAllProducts,
   updateProduct,
-  updateMercariCrawlSetting,
   getProductById,
-  getMercariCrawlSettingByProductId,
 } from "../../models/products";
 import {
   validateCreateProductRequest,
@@ -56,7 +54,7 @@ productsRouter.post("/", async (c) => {
     });
 
     if (validatedData.mercariSettings) {
-      const mercariSetting = await createMercariCrawlSetting(db, {
+      await createMercariCrawlSetting(db, {
         productId: product.id,
         keyword: validatedData.mercariSettings.keyword,
         categoryId: validatedData.mercariSettings.categoryId ?? undefined,
@@ -105,83 +103,29 @@ productsRouter.put("/:id", async (c) => {
     const validatedData = validationResult.data;
     const db = createDb(c.env);
 
-    // 商品が存在するかチェック
     const existingProduct = await getProductById(db, productId);
     if (!existingProduct) {
       return c.json({ error: "商品が見つかりません" }, 404);
     }
 
-    // 商品を更新
-    const updatedProduct = await updateProduct(db, productId, {
+    const updatedData = await updateProduct(db, productId, {
       name: validatedData.name,
+      mercariSettings: validatedData.mercariSettings ? {
+        ...validatedData.mercariSettings,
+        categoryId: validatedData.mercariSettings.categoryId ?? undefined,
+      } : undefined,
     });
-
-    // メルカリ設定を更新または作成
-    if (validatedData.mercariSettings) {
-      const existingMercariSetting = await getMercariCrawlSettingByProductId(
-        db,
-        productId
-      );
-
-      if (existingMercariSetting) {
-        // 既存の設定を更新
-        await updateMercariCrawlSetting(db, productId, {
-          keyword: validatedData.mercariSettings.keyword,
-          categoryId: validatedData.mercariSettings.categoryId ?? undefined,
-          minPrice: validatedData.mercariSettings.minPrice,
-          maxPrice: validatedData.mercariSettings.maxPrice,
-          enabled: validatedData.mercariSettings.enabled,
-        });
-      } else {
-        // 新しい設定を作成
-        await createMercariCrawlSetting(db, {
-          productId: productId,
-          keyword: validatedData.mercariSettings.keyword,
-          categoryId: validatedData.mercariSettings.categoryId ?? undefined,
-          minPrice: validatedData.mercariSettings.minPrice,
-          maxPrice: validatedData.mercariSettings.maxPrice,
-          enabled: validatedData.mercariSettings.enabled,
-        });
-      }
-    }
 
     return c.json(
       {
         success: true,
         message: "商品が正常に更新されました",
-        data: {
-          product: updatedProduct,
-          mercariSettings: validatedData.mercariSettings,
-        },
+        data: updatedData,
       },
       200
     );
   } catch (error) {
     console.error("Error updating product:", error);
-    return c.json({ error: "サーバーエラーが発生しました" }, 500);
-  }
-});
-
-// GET: /api/products/:id/mercari_settings
-productsRouter.get("/:id/mercari_settings", async (c) => {
-  try {
-    const productId = parseInt(c.req.param("id"));
-    if (isNaN(productId)) {
-      return c.json({ error: "無効な商品IDです" }, 400);
-    }
-
-    const db = createDb(c.env);
-    const mercariSetting = await getMercariCrawlSettingByProductId(
-      db,
-      productId
-    );
-
-    return c.json({
-      success: true,
-      data: mercariSetting,
-    });
-  } catch (error) {
-    console.error("Error fetching mercari settings:", error);
     return c.json({ error: "サーバーエラーが発生しました" }, 500);
   }
 });
