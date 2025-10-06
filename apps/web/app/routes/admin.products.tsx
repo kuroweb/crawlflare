@@ -8,6 +8,7 @@ import { isAuthenticated } from "~/lib/isAuthenticated";
 import Layout from "~/components/layouts/Layout";
 import { useState } from "react";
 import CreateProductModal from "~/features/products/components/createProductModal/CreateProductModal";
+import UpdateProductModal from "~/features/products/components/createProductModal/UpdateProductModal";
 import { getApiBaseUrl } from "~/lib/api";
 
 export async function loader(args: LoaderFunctionArgs) {
@@ -32,7 +33,42 @@ export async function loader(args: LoaderFunctionArgs) {
     };
     const products = apiResponse.data || [];
 
-    return { products, authenticated };
+    const productsWithSettings = await Promise.all(
+      products.map(async (product: any) => {
+        try {
+          const settingsResponse = await fetch(
+            `${apiBaseUrl}/api/products/${product.id}/mercari_settings`,
+            {
+              headers: {
+                Authorization: args.request.headers.get("Authorization") || "",
+              },
+            }
+          );
+
+          if (settingsResponse.ok) {
+            const settingsData = (await settingsResponse.json()) as {
+              data: any;
+            };
+            return {
+              ...product,
+              mercariSettings: settingsData.data || null,
+            };
+          }
+        } catch (error) {
+          console.error(
+            `Error fetching mercari settings for product ${product.id}:`,
+            error
+          );
+        }
+
+        return {
+          ...product,
+          mercariSettings: null,
+        };
+      })
+    );
+
+    return { products: productsWithSettings, authenticated };
   } catch (error) {
     console.error("Error fetching products from API:", error);
     return { products: [], authenticated };
@@ -41,16 +77,28 @@ export async function loader(args: LoaderFunctionArgs) {
 
 export default function AdminProducts() {
   const { products, authenticated } = useLoaderData<typeof loader>();
-  const [modal, setModal] = useState<boolean>(false);
+  const [createModal, setCreateModal] = useState<boolean>(false);
+  const [updateModal, setUpdateModal] = useState<boolean>(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const navigate = useNavigate();
 
-  const handleModalClose = () => {
-    setModal(false);
+  const handleCreateModalClose = () => {
+    setCreateModal(false);
+  };
+
+  const handleUpdateModalClose = () => {
+    setUpdateModal(false);
+    setSelectedProduct(null);
   };
 
   const handleSuccess = () => {
     // ページを再読み込みして最新のデータを取得
     navigate(".", { replace: true });
+  };
+
+  const handleEditProduct = (product: any) => {
+    setSelectedProduct(product);
+    setUpdateModal(true);
   };
 
   return (
@@ -61,14 +109,23 @@ export default function AdminProducts() {
             <div className="card-body">
               <h2 className="card-title">計測管理</h2>
               <div className="flex justify-end">
-                <div className="btn btn-primary" onClick={() => setModal(true)}>
+                <div
+                  className="btn btn-primary"
+                  onClick={() => setCreateModal(true)}
+                >
                   計測対象を追加
                 </div>
               </div>
               <CreateProductModal
-                isOpen={modal}
-                onClose={handleModalClose}
+                isOpen={createModal}
+                onClose={handleCreateModalClose}
                 onSuccess={handleSuccess}
+              />
+              <UpdateProductModal
+                isOpen={updateModal}
+                onClose={handleUpdateModalClose}
+                onSuccess={handleSuccess}
+                product={selectedProduct}
               />
               <table className="table">
                 <thead>
@@ -123,7 +180,7 @@ export default function AdminProducts() {
                             <li>
                               <button
                                 className="btn btn-primary"
-                                onClick={() => {}}
+                                onClick={() => handleEditProduct(product)}
                               >
                                 編集
                               </button>
