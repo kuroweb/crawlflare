@@ -1,7 +1,16 @@
-import { redirect, type LoaderFunctionArgs, useLoaderData } from "react-router";
+import {
+  redirect,
+  type LoaderFunctionArgs,
+  useLoaderData,
+  useNavigate,
+} from "react-router";
 import { isAuthenticated } from "~/lib/isAuthenticated";
 import Layout from "~/components/layouts/Layout";
 import { getApiBaseUrl } from "~/lib/api";
+import { useState } from "react";
+import CreateUserModal from "~/features/users/components/CreateUserModal";
+import UpdateUserModal from "~/features/users/components/UpdateUserModal";
+import DeleteUserModal from "~/features/users/components/DeleteUserModal";
 
 export async function loader(args: LoaderFunctionArgs) {
   const authenticated = await isAuthenticated(args);
@@ -34,6 +43,26 @@ export async function loader(args: LoaderFunctionArgs) {
 
 export default function AdminUsers() {
   const { users, authenticated } = useLoaderData<typeof loader>();
+  const navigate = useNavigate();
+
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+
+  const handleSuccess = () => {
+    navigate(".", { replace: true });
+  };
+
+  const handleEditClick = (user: any) => {
+    setSelectedUser(user);
+    setIsUpdateModalOpen(true);
+  };
+
+  const handleDeleteClick = (user: any) => {
+    setSelectedUser(user);
+    setIsDeleteModalOpen(true);
+  };
 
   return (
     <>
@@ -41,7 +70,15 @@ export default function AdminUsers() {
         <div className="grid grid-cols-1 gap-4">
           <div className="card w-full bg-base-200">
             <div className="card-body">
-              <h2 className="card-title">ユーザー管理</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="card-title">ユーザー管理</h2>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setIsCreateModalOpen(true)}
+                >
+                  ユーザーを追加
+                </button>
+              </div>
               <table className="table">
                 <thead>
                   <tr>
@@ -95,7 +132,7 @@ export default function AdminUsers() {
                             <li>
                               <button
                                 className="btn btn-primary"
-                                onClick={() => {}}
+                                onClick={() => handleEditClick(user)}
                               >
                                 編集
                               </button>
@@ -103,7 +140,7 @@ export default function AdminUsers() {
                             <li>
                               <button
                                 className="btn btn-error"
-                                onClick={() => {}}
+                                onClick={() => handleDeleteClick(user)}
                               >
                                 削除
                               </button>
@@ -119,6 +156,27 @@ export default function AdminUsers() {
           </div>
         </div>
       </Layout>
+
+      {/* モーダル */}
+      <CreateUserModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={handleSuccess}
+      />
+
+      <UpdateUserModal
+        isOpen={isUpdateModalOpen}
+        onClose={() => setIsUpdateModalOpen(false)}
+        onSuccess={handleSuccess}
+        user={selectedUser}
+      />
+
+      <DeleteUserModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onSuccess={handleSuccess}
+        user={selectedUser}
+      />
     </>
   );
 }

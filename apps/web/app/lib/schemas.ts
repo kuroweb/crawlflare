@@ -42,5 +42,19 @@ export const productFormSchema = z.object({
     ),
 });
 
+// ユーザー作成・更新フォームのバリデーションスキーマ
+export const userFormSchema = z.object({
+  email: z
+    .string()
+    .min(1, "メールアドレスは必須です")
+    .email("有効なメールアドレスを入力してください")
+    .max(255, "メールアドレスは255文字以下である必要があります"),
+  password: z
+    .string()
+    .min(6, "パスワードは6文字以上である必要があります")
+    .max(100, "パスワードは100文字以下である必要があります"),
+});
+
 // 型推論
 export type ProductFormData = z.infer<typeof productFormSchema>;
+export type UserFormData = z.infer<typeof userFormSchema>;
