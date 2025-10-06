@@ -6,6 +6,7 @@ import {
   getAllProducts,
   updateProduct,
   getProductById,
+  deleteProduct,
 } from "../../models/products";
 import {
   validateCreateProductRequest,
@@ -110,10 +111,12 @@ productsRouter.put("/:id", async (c) => {
 
     const updatedData = await updateProduct(db, productId, {
       name: validatedData.name,
-      mercariSettings: validatedData.mercariSettings ? {
-        ...validatedData.mercariSettings,
-        categoryId: validatedData.mercariSettings.categoryId ?? undefined,
-      } : undefined,
+      mercariSettings: validatedData.mercariSettings
+        ? {
+            ...validatedData.mercariSettings,
+            categoryId: validatedData.mercariSettings.categoryId ?? undefined,
+          }
+        : undefined,
     });
 
     return c.json(
@@ -126,6 +129,39 @@ productsRouter.put("/:id", async (c) => {
     );
   } catch (error) {
     console.error("Error updating product:", error);
+    return c.json({ error: "サーバーエラーが発生しました" }, 500);
+  }
+});
+
+// DELETE: /api/products/:id
+productsRouter.delete("/:id", async (c) => {
+  try {
+    const productId = parseInt(c.req.param("id"));
+    if (isNaN(productId)) {
+      return c.json({ error: "無効な商品IDです" }, 400);
+    }
+
+    const db = createDb(c.env);
+
+    const existingProduct = await getProductById(db, productId);
+    if (!existingProduct) {
+      return c.json({ error: "商品が見つかりません" }, 404);
+    }
+
+    const deleted = await deleteProduct(db, productId);
+    if (!deleted) {
+      return c.json({ error: "商品の削除に失敗しました" }, 500);
+    }
+
+    return c.json(
+      {
+        success: true,
+        message: "商品が正常に削除されました",
+      },
+      200
+    );
+  } catch (error) {
+    console.error("Error deleting product:", error);
     return c.json({ error: "サーバーエラーが発生しました" }, 500);
   }
 });

@@ -185,3 +185,20 @@ export async function getMercariCrawlSettingByProductId(
 
   return result[0] || null;
 }
+
+export async function deleteProduct(
+  db: Database,
+  id: number
+): Promise<boolean> {
+  await db
+    .delete(mercariCrawlSettings)
+    .where(eq(mercariCrawlSettings.productId, id));
+
+  // 次にproductを削除
+  const result = await db
+    .delete(products)
+    .where(eq(products.id, id))
+    .returning();
+
+  return result.length > 0;
+}

@@ -9,6 +9,7 @@ import Layout from "~/components/layouts/Layout";
 import { useState } from "react";
 import CreateProductModal from "~/features/products/components/CreateProductModal";
 import UpdateProductModal from "~/features/products/components/UpdateProductModal";
+import DeleteProductModal from "~/features/products/components/DeleteProductModal";
 import { getApiBaseUrl } from "~/lib/api";
 
 export async function loader(args: LoaderFunctionArgs) {
@@ -44,6 +45,7 @@ export default function AdminProducts() {
   const { products, authenticated } = useLoaderData<typeof loader>();
   const [createModal, setCreateModal] = useState<boolean>(false);
   const [updateModal, setUpdateModal] = useState<boolean>(false);
+  const [deleteModal, setDeleteModal] = useState<boolean>(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const navigate = useNavigate();
 
@@ -56,6 +58,11 @@ export default function AdminProducts() {
     setSelectedProduct(null);
   };
 
+  const handleDeleteModalClose = () => {
+    setDeleteModal(false);
+    setSelectedProduct(null);
+  };
+
   const handleSuccess = () => {
     // ページを再読み込みして最新のデータを取得
     navigate(".", { replace: true });
@@ -64,6 +71,11 @@ export default function AdminProducts() {
   const handleEditProduct = (product: any) => {
     setSelectedProduct(product);
     setUpdateModal(true);
+  };
+
+  const handleDeleteProduct = (product: any) => {
+    setSelectedProduct(product);
+    setDeleteModal(true);
   };
 
   return (
@@ -89,6 +101,12 @@ export default function AdminProducts() {
               <UpdateProductModal
                 isOpen={updateModal}
                 onClose={handleUpdateModalClose}
+                onSuccess={handleSuccess}
+                product={selectedProduct}
+              />
+              <DeleteProductModal
+                isOpen={deleteModal}
+                onClose={handleDeleteModalClose}
                 onSuccess={handleSuccess}
                 product={selectedProduct}
               />
@@ -153,7 +171,7 @@ export default function AdminProducts() {
                             <li>
                               <button
                                 className="btn btn-error"
-                                onClick={() => {}}
+                                onClick={() => handleDeleteProduct(product)}
                               >
                                 削除
                               </button>
