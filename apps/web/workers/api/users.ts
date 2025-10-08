@@ -1,114 +1,197 @@
-import { Hono } from "hono";
+import { createRoute, type RouteHandler, z } from "@hono/zod-openapi";
+import {
+  UsersResponseSchema,
+  UserFormRequestSchema,
+  UserResponseSchema,
+} from "../schemas/users";
+import { ErrorResponseSchema } from "../schemas/common";
 import { createDb } from "../../db/client";
 import {
   getAllUsers,
   createUser,
+  findUserById,
   updateUser,
   deleteUser,
-  findUserById,
-} from "../../models/users";
-import { userFormSchema } from "../lib/schemas";
+} from "../models/users";
 
-const usersRouter = new Hono<{ Bindings: Env }>();
-
-// GET: /api/users
-usersRouter.get("/", async (c) => {
+export const usersGetRoute = createRoute({
+  method: "get",
+  path: "/users",
+  request: {},
+  responses: {
+    200: {
+      description: "List users",
+      content: { "application/json": { schema: UsersResponseSchema } },
+    },
+    500: {
+      description: "Server error",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+  },
+});
+export const usersGetHandler: RouteHandler<
+  typeof usersGetRoute,
+  { Bindings: Env }
+> = async (c) => {
   try {
     const db = createDb(c.env);
     const users = await getAllUsers(db);
-
-    return c.json({
-      success: true,
-      data: users,
-    });
+    return c.json({ success: true, data: users } as const, 200);
   } catch (error) {
     console.error("Error fetching users:", error);
-    return c.json({ error: "サーバーエラーが発生しました" }, 500);
+    return c.json({ error: "サーバーエラーが発生しました" } as const, 500);
   }
-});
+};
 
-// POST: /api/users
-usersRouter.post("/", async (c) => {
+export const usersPostRoute = createRoute({
+  method: "post",
+  path: "/users",
+  request: {
+    body: {
+      content: { "application/json": { schema: UserFormRequestSchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: "Created",
+      content: { "application/json": { schema: UserResponseSchema } },
+    },
+    400: {
+      description: "Bad request",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    500: {
+      description: "Server error",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+  },
+});
+export const usersPostHandler: RouteHandler<
+  typeof usersPostRoute,
+  { Bindings: Env }
+> = async (c) => {
   try {
     const body = await c.req.json();
-    const validatedData = userFormSchema.parse(body);
-
+    let input: z.infer<typeof UserFormRequestSchema>;
+    try {
+      input = UserFormRequestSchema.parse(body);
+    } catch (e) {
+      if (e instanceof z.ZodError)
+        return c.json({ error: "入力データが無効です" } as const, 400);
+      throw e;
+    }
     const db = createDb(c.env);
-    const user = await createUser(db, validatedData);
-
-    return c.json({
-      success: true,
-      data: user,
-    });
+    const user = await createUser(db, input);
+    return c.json({ success: true, data: user } as const, 200);
   } catch (error) {
     console.error("Error creating user:", error);
-    if (error instanceof Error && error.name === "ZodError") {
-      return c.json({ error: "入力データが無効です" }, 400);
-    }
-    return c.json({ error: "サーバーエラーが発生しました" }, 500);
+    return c.json({ error: "サーバーエラーが発生しました" } as const, 500);
   }
+};
+
+export const usersPutRoute = createRoute({
+  method: "put",
+  path: "/users/{id}",
+  request: {
+    params: z.object({ id: z.string().regex(/^\d+$/) }),
+    body: {
+      content: { "application/json": { schema: UserFormRequestSchema } },
+    },
+  },
+  responses: {
+    200: {
+      description: "Updated",
+      content: { "application/json": { schema: UserResponseSchema } },
+    },
+    400: {
+      description: "Bad request",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    404: {
+      description: "Not found",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    500: {
+      description: "Server error",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+  },
 });
-
-// PUT: /api/users/:id
-usersRouter.put("/:id", async (c) => {
+export const usersPutHandler: RouteHandler<
+  typeof usersPutRoute,
+  { Bindings: Env }
+> = async (c) => {
   try {
-    const id = parseInt(c.req.param("id"));
-    if (isNaN(id)) {
-      return c.json({ error: "無効なIDです" }, 400);
-    }
-
+    const id = Number(c.req.param("id"));
+    if (Number.isNaN(id))
+      return c.json({ error: "無効なIDです" } as const, 400);
     const body = await c.req.json();
-    const validatedData = userFormSchema.parse(body);
-
-    const db = createDb(c.env);
-
-    // ユーザーが存在するかチェック
-    const existingUser = await findUserById(db, id);
-    if (!existingUser) {
-      return c.json({ error: "ユーザーが見つかりません" }, 404);
+    let input: z.infer<typeof UserFormRequestSchema>;
+    try {
+      input = UserFormRequestSchema.parse(body);
+    } catch (e) {
+      if (e instanceof z.ZodError)
+        return c.json({ error: "入力データが無効です" } as const, 400);
+      throw e;
     }
-
-    const user = await updateUser(db, id, validatedData);
-
-    return c.json({
-      success: true,
-      data: user,
-    });
+    const db = createDb(c.env);
+    const existing = await findUserById(db, id);
+    if (!existing)
+      return c.json({ error: "ユーザーが見つかりません" } as const, 404);
+    const user = await updateUser(db, id, input);
+    return c.json({ success: true, data: user } as const, 200);
   } catch (error) {
     console.error("Error updating user:", error);
-    if (error instanceof Error && error.name === "ZodError") {
-      return c.json({ error: "入力データが無効です" }, 400);
-    }
-    return c.json({ error: "サーバーエラーが発生しました" }, 500);
+    return c.json({ error: "サーバーエラーが発生しました" } as const, 500);
   }
+};
+
+export const usersDeleteRoute = createRoute({
+  method: "delete",
+  path: "/users/{id}",
+  request: { params: z.object({ id: z.string().regex(/^\d+$/) }) },
+  responses: {
+    200: {
+      description: "Deleted",
+      content: {
+        "application/json": {
+          schema: z.object({ success: z.literal(true), message: z.string() }),
+        },
+      },
+    },
+    400: {
+      description: "Bad request",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    404: {
+      description: "Not found",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+    500: {
+      description: "Server error",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
+  },
 });
-
-// DELETE: /api/users/:id
-usersRouter.delete("/:id", async (c) => {
+export const usersDeleteHandler: RouteHandler<
+  typeof usersDeleteRoute,
+  { Bindings: Env }
+> = async (c) => {
   try {
-    const id = parseInt(c.req.param("id"));
-    if (isNaN(id)) {
-      return c.json({ error: "無効なIDです" }, 400);
-    }
-
+    const id = Number(c.req.param("id"));
+    if (Number.isNaN(id))
+      return c.json({ error: "無効なIDです" } as const, 400);
     const db = createDb(c.env);
-
-    // ユーザーが存在するかチェック
-    const existingUser = await findUserById(db, id);
-    if (!existingUser) {
-      return c.json({ error: "ユーザーが見つかりません" }, 404);
-    }
-
+    const existing = await findUserById(db, id);
+    if (!existing)
+      return c.json({ error: "ユーザーが見つかりません" } as const, 404);
     await deleteUser(db, id);
-
-    return c.json({
-      success: true,
-      message: "ユーザーが削除されました",
-    });
+    return c.json(
+      { success: true, message: "ユーザーが削除されました" } as const,
+      200
+    );
   } catch (error) {
     console.error("Error deleting user:", error);
-    return c.json({ error: "サーバーエラーが発生しました" }, 500);
+    return c.json({ error: "サーバーエラーが発生しました" } as const, 500);
   }
-});
-
-export default usersRouter;
+};

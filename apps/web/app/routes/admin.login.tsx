@@ -10,7 +10,7 @@ import {
 
 import { createLoginCookie } from "../lib/login";
 import { createDb } from "../../db/client";
-import { verifyCredentials } from "models/users";
+import { verifyCredentials } from "workers/models/users";
 import { isAuthenticated } from "~/lib/isAuthenticated";
 import Layout from "~/components/layouts/Layout";
 

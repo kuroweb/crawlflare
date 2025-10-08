@@ -3,8 +3,7 @@ import { basicAuth } from "hono/basic-auth";
 import { contextStorage } from "hono/context-storage";
 import { requestId } from "hono/request-id";
 import type { RequestIdVariables } from "hono/request-id";
-import productsRouter from "./api/products";
-import usersRouter from "./api/users";
+import ApiRouter from "./api";
 import { jsonLogger } from "./middleware/logger";
 import { reactRouterHandler } from "./middleware/react-router";
 
@@ -33,8 +32,7 @@ app.use("*", async (c, next) => {
 });
 
 // API Routes
-app.route("/api/products", productsRouter);
-app.route("/api/users", usersRouter);
+app.route("/api", ApiRouter);
 
 // React Router
 app.use("*", reactRouterHandler());

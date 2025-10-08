@@ -1,5 +1,5 @@
-import { products, mercariCrawlSettings } from "../db/schema";
-import type { Database } from "../db/client";
+import { products, mercariCrawlSettings } from "../../db/schema";
+import type { Database } from "../../db/client";
 import type { InferSelectModel } from "drizzle-orm";
 import { eq } from "drizzle-orm";
 
