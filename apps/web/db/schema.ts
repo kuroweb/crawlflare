@@ -5,15 +5,23 @@ export const users = sqliteTable("users", {
   id: integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
   email: text().notNull(),
   password: text().notNull(),
-  createdAt: text().default(sql`(CURRENT_TIMESTAMP)`),
-  updatedAt: text().default(sql`(CURRENT_TIMESTAMP)`),
+  createdAt: text()
+    .notNull()
+    .default(sql`(CURRENT_TIMESTAMP)`),
+  updatedAt: text()
+    .notNull()
+    .default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 export const products = sqliteTable("products", {
   id: integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
   name: text().notNull(),
-  createdAt: text().default(sql`(CURRENT_TIMESTAMP)`),
-  updatedAt: text().default(sql`(CURRENT_TIMESTAMP)`),
+  createdAt: text()
+    .notNull()
+    .default(sql`(CURRENT_TIMESTAMP)`),
+  updatedAt: text()
+    .notNull()
+    .default(sql`(CURRENT_TIMESTAMP)`),
 });
 
 export const mercariCrawlSettings = sqliteTable("mercari_crawl_settings", {
@@ -24,6 +32,10 @@ export const mercariCrawlSettings = sqliteTable("mercari_crawl_settings", {
   minPrice: integer({ mode: "number" }).notNull().default(0),
   maxPrice: integer({ mode: "number" }).notNull().default(0),
   enabled: integer({ mode: "boolean" }).notNull().default(false),
-  createdAt: text().default(sql`(CURRENT_TIMESTAMP)`),
-  updatedAt: text().default(sql`(CURRENT_TIMESTAMP)`),
+  createdAt: text()
+    .notNull()
+    .default(sql`(CURRENT_TIMESTAMP)`),
+  updatedAt: text()
+    .notNull()
+    .default(sql`(CURRENT_TIMESTAMP)`),
 });
