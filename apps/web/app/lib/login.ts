@@ -1,8 +1,6 @@
 import { generateCookie } from "hono/cookie";
 import { sign } from "hono/jwt";
-
-// クッキー名
-export const LOGIN_COOKIE_NAME = "login-token";
+import { LOGIN_COOKIE_NAME } from "../../workers/middleware/auth";
 
 export async function createLoginCookie(
   email: string,

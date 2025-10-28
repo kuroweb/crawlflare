@@ -20,6 +20,10 @@ import {
   productsDeleteRoute,
   productsDeleteHandler,
 } from "./products";
+import {
+  authLoginRoute,
+  authLoginHandler,
+} from "./auth";
 
 const ApiRouter = new OpenAPIHono<{ Bindings: Env }>();
 
@@ -29,6 +33,7 @@ ApiRouter.doc("/openapi.json", {
   servers: [{ url: "/api" }],
 });
 
+ApiRouter.openapi(authLoginRoute, authLoginHandler);
 ApiRouter.openapi(usersGetRoute, usersGetHandler);
 ApiRouter.openapi(usersPostRoute, usersPostHandler);
 ApiRouter.openapi(usersPutRoute, usersPutHandler);

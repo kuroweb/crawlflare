@@ -1,5 +1,5 @@
 import { generateCookie } from "hono/cookie";
-import { LOGIN_COOKIE_NAME } from "./login";
+import { LOGIN_COOKIE_NAME } from "../../workers/middleware/auth";
 
 export function createLogoutCookie(): string {
   return generateCookie(LOGIN_COOKIE_NAME, "", {
