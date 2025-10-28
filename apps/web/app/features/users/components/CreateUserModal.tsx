@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userFormSchema, type UserFormData } from "~/lib/schemas";
+import { clientApi } from "~/lib/api";
 
 interface CreateUserModalProps {
   isOpen: boolean;
@@ -28,11 +29,8 @@ export default function CreateUserModal({
 
   const onSubmit = async (data: UserFormData) => {
     try {
-      const response = await fetch("/api/users", {
+      const response = await clientApi("/api/users", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(data),
       });
 

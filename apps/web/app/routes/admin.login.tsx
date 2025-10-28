@@ -8,10 +8,8 @@ import {
   type LoaderFunctionArgs,
 } from "react-router";
 
-import { createLoginCookie } from "../lib/login";
-import { createDb } from "../../db/client";
-import { verifyCredentials } from "workers/models/users";
 import { isAuthenticated } from "~/lib/isAuthenticated";
+import { serverApi } from "~/lib/api";
 import Layout from "~/components/layouts/Layout";
 
 export async function action({
@@ -19,25 +17,26 @@ export async function action({
   context,
 }: ActionFunctionArgs<AppLoadContext>) {
   const form = await request.formData();
-  const inputEmail = String(form.get("email") || "").trim();
-  const inputPassword = String(form.get("password") || "").trim();
+  const email = String(form.get("email") || "").trim();
+  const password = String(form.get("password") || "").trim();
 
-  if (!inputEmail || !inputPassword) {
-    return { errors: { message: "Missing inputs." } };
+  if (!email || !password) {
+    return { errors: { message: "メールアドレスとパスワードを入力してください" } };
   }
 
-  const db = createDb(context.cloudflare.env);
+  const response = await serverApi(request, "/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
 
-  const ok = await verifyCredentials(db, inputEmail, inputPassword);
-  if (!ok) {
-    return { errors: { message: "Invalid Email or Password" } };
+  if (!response.ok) {
+    return { errors: { message: "メールアドレスまたはパスワードが正しくありません" } };
   }
 
-  const token = await createLoginCookie(
-    inputEmail,
-    context.cloudflare.env.LOGIN_JWT_SECRET
-  );
-  return redirect("/", { headers: { "Set-Cookie": token } });
+  const setCookie = response.headers.get("Set-Cookie");
+  return redirect("/", {
+    headers: setCookie ? { "Set-Cookie": setCookie } : {},
+  });
 }
 
 export async function loader(args: LoaderFunctionArgs) {

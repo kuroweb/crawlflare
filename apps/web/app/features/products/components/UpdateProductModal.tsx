@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { productFormSchema, type ProductFormData } from "~/lib/schemas";
 import MercariForm from "./MercariForm";
+import { clientApi } from "~/lib/api";
 
 interface UpdateProductModalProps {
   isOpen: boolean;
@@ -70,11 +71,8 @@ export default function UpdateProductModal({
     if (!product) return;
 
     try {
-      const response = await fetch(`/api/products/${product.id}`, {
+      const response = await clientApi(`/api/products/${product.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(data),
       });
 

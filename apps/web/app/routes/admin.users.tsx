@@ -6,7 +6,7 @@ import {
 } from "react-router";
 import { isAuthenticated } from "~/lib/isAuthenticated";
 import Layout from "~/components/layouts/Layout";
-import { getApiBaseUrl } from "~/lib/api";
+import { serverApi } from "~/lib/api";
 import { useState } from "react";
 import CreateUserModal from "~/features/users/components/CreateUserModal";
 import UpdateUserModal from "~/features/users/components/UpdateUserModal";
@@ -17,12 +17,7 @@ export async function loader(args: LoaderFunctionArgs) {
   if (!authenticated) return redirect("/admin/login");
 
   try {
-    const apiBaseUrl = getApiBaseUrl(args.request);
-    const response = await fetch(`${apiBaseUrl}/api/users`, {
-      headers: {
-        Authorization: args.request.headers.get("Authorization") || "",
-      },
-    });
+    const response = await serverApi(args.request, "/api/users");
 
     if (!response.ok) {
       throw new Error(`API request failed: ${response.status}`);

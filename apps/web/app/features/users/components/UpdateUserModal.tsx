@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { userFormSchema, type UserFormData } from "~/lib/schemas";
+import { clientApi } from "~/lib/api";
 
 interface UpdateUserModalProps {
   isOpen: boolean;
@@ -49,11 +50,8 @@ export default function UpdateUserModal({
     if (!user) return;
 
     try {
-      const response = await fetch(`/api/users/${user.id}`, {
+      const response = await clientApi(`/api/users/${user.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(data),
       });
 

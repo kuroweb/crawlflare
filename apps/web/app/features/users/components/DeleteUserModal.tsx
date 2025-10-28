@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { clientApi } from "~/lib/api";
 
 interface DeleteUserModalProps {
   isOpen: boolean;
@@ -23,11 +24,8 @@ export default function DeleteUserModal({
     setError(null);
 
     try {
-      const response = await fetch(`/api/users/${user.id}`, {
+      const response = await clientApi(`/api/users/${user.id}`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
       });
 
       if (!response.ok) {

@@ -10,19 +10,14 @@ import { useState } from "react";
 import CreateProductModal from "~/features/products/components/CreateProductModal";
 import UpdateProductModal from "~/features/products/components/UpdateProductModal";
 import DeleteProductModal from "~/features/products/components/DeleteProductModal";
-import { getApiBaseUrl } from "~/lib/api";
+import { serverApi } from "~/lib/api";
 
 export async function loader(args: LoaderFunctionArgs) {
   const authenticated = await isAuthenticated(args);
   if (!authenticated) return redirect("/admin/login");
 
   try {
-    const apiBaseUrl = getApiBaseUrl(args.request);
-    const response = await fetch(`${apiBaseUrl}/api/products`, {
-      headers: {
-        Authorization: args.request.headers.get("Authorization") || "",
-      },
-    });
+    const response = await serverApi(args.request, "/api/products");
 
     if (!response.ok) {
       throw new Error(`API request failed: ${response.status}`);

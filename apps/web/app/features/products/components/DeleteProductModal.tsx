@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { clientApi } from "~/lib/api";
 
 interface DeleteProductModalProps {
   isOpen: boolean;
@@ -23,11 +24,8 @@ export default function DeleteProductModal({
     setError(null);
 
     try {
-      const response = await fetch(`/api/products/${product.id}`, {
+      const response = await clientApi(`/api/products/${product.id}`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
       });
 
       if (!response.ok) {
