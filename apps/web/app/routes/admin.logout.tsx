@@ -1,10 +1,14 @@
 import { redirect, type ActionFunctionArgs } from "react-router";
-import { createLogoutCookie } from "~/lib/logout";
+import { serverApi } from "~/lib/api";
 
 export async function action({ request }: ActionFunctionArgs) {
-  const cookie = createLogoutCookie();
-  return redirect("/admin/login", {
-    headers: { "Set-Cookie": cookie },
+  const response = await serverApi(request, "/api/auth/logout", {
+    method: "POST",
+  });
+
+  const setCookie = response.headers.get("Set-Cookie");
+  return redirect("/", {
+    headers: setCookie ? { "Set-Cookie": setCookie } : {},
   });
 }
 
