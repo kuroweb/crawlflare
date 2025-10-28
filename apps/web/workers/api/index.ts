@@ -23,6 +23,8 @@ import {
 import {
   authLoginRoute,
   authLoginHandler,
+  authLogoutRoute,
+  authLogoutHandler,
 } from "./auth";
 
 const ApiRouter = new OpenAPIHono<{ Bindings: Env }>();
@@ -34,6 +36,7 @@ ApiRouter.doc("/openapi.json", {
 });
 
 ApiRouter.openapi(authLoginRoute, authLoginHandler);
+ApiRouter.openapi(authLogoutRoute, authLogoutHandler);
 ApiRouter.openapi(usersGetRoute, usersGetHandler);
 ApiRouter.openapi(usersPostRoute, usersPostHandler);
 ApiRouter.openapi(usersPutRoute, usersPutHandler);

@@ -112,3 +112,44 @@ export const authLoginHandler: RouteHandler<
     return c.json({ error: "サーバーエラーが発生しました" } as const, 500);
   }
 };
+
+const LogoutResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+});
+
+export const authLogoutRoute = createRoute({
+  method: "post",
+  path: "/auth/logout",
+  request: {},
+  responses: {
+    200: {
+      description: "ログアウト成功",
+      content: { "application/json": { schema: LogoutResponseSchema } },
+    },
+  },
+});
+
+export const authLogoutHandler: RouteHandler<
+  typeof authLogoutRoute,
+  { Bindings: Env }
+> = async (c) => {
+  const cookie = generateCookie(LOGIN_COOKIE_NAME, "", {
+    maxAge: 0,
+    path: "/",
+    httpOnly: true,
+    sameSite: "Lax",
+    secure: true,
+  });
+
+  return c.json(
+    {
+      success: true,
+      message: "ログアウトしました",
+    } as const,
+    200,
+    {
+      "Set-Cookie": cookie,
+    }
+  );
+};
