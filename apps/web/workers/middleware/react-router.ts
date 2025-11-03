@@ -8,7 +8,7 @@ export const reactRouterHandler = (): MiddlewareHandler<{
     // @ts-ignore
     const requestHandler = createRequestHandler(
       // @ts-ignore
-      () => import("../build/server/index.js"),
+      () => import("../../build/server/index.js"),
       import.meta.env?.MODE
     );
 
