@@ -4,7 +4,7 @@ import { createDb } from "../../db/client";
 import { findUserByEmail } from "../models/users";
 import { generateCookie } from "hono/cookie";
 import { sign } from "hono/jwt";
-import { LOGIN_COOKIE_NAME } from "../middleware/auth";
+import { LOGIN_COOKIE_NAME, type AuthVariables } from "../middleware/auth";
 
 const LoginRequestSchema = z.object({
   email: z.string(),
@@ -45,7 +45,7 @@ export const authLoginRoute = createRoute({
 
 export const authLoginHandler: RouteHandler<
   typeof authLoginRoute,
-  { Bindings: Env }
+  { Bindings: Env; Variables: AuthVariables }
 > = async (c) => {
   try {
     const body = await c.req.json();
@@ -132,7 +132,7 @@ export const authLogoutRoute = createRoute({
 
 export const authLogoutHandler: RouteHandler<
   typeof authLogoutRoute,
-  { Bindings: Env }
+  { Bindings: Env; Variables: AuthVariables }
 > = async (c) => {
   const cookie = generateCookie(LOGIN_COOKIE_NAME, "", {
     maxAge: 0,

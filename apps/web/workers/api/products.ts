@@ -19,6 +19,7 @@ import {
   updateProduct,
   deleteProduct,
 } from "../models/products";
+import type { AuthVariables } from "../middleware/auth";
 
 export const productsGetRoute = createRoute({
   method: "get",
@@ -37,7 +38,7 @@ export const productsGetRoute = createRoute({
 });
 export const productsGetHandler: RouteHandler<
   typeof productsGetRoute,
-  { Bindings: Env }
+  { Bindings: Env; Variables: AuthVariables }
 > = async (c) => {
   try {
     const db = createDb(c.env);
@@ -76,7 +77,7 @@ export const productsPostRoute = createRoute({
 });
 export const productsPostHandler: RouteHandler<
   typeof productsPostRoute,
-  { Bindings: Env }
+  { Bindings: Env; Variables: AuthVariables }
 > = async (c) => {
   try {
     const body = await c.req.json();
@@ -151,7 +152,7 @@ export const productsPutRoute = createRoute({
 });
 export const productsPutHandler: RouteHandler<
   typeof productsPutRoute,
-  { Bindings: Env }
+  { Bindings: Env; Variables: AuthVariables }
 > = async (c) => {
   try {
     const id = Number(c.req.param("id"));
@@ -225,7 +226,7 @@ export const productsDeleteRoute = createRoute({
 });
 export const productsDeleteHandler: RouteHandler<
   typeof productsDeleteRoute,
-  { Bindings: Env }
+  { Bindings: Env; Variables: AuthVariables }
 > = async (c) => {
   try {
     const id = Number(c.req.param("id"));

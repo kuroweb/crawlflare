@@ -26,9 +26,9 @@ import {
   authLogoutRoute,
   authLogoutHandler,
 } from "./auth";
-import { authMiddleware } from "../middleware/auth";
+import { authMiddleware, type AuthVariables } from "../middleware/auth";
 
-const ApiRouter = new OpenAPIHono<{ Bindings: Env }>();
+const ApiRouter = new OpenAPIHono<{ Bindings: Env; Variables: AuthVariables }>();
 
 ApiRouter.doc("/openapi.json", {
   openapi: "3.0.0",

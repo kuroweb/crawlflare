@@ -32,7 +32,7 @@ export const usersGetRoute = createRoute({
 });
 export const usersGetHandler: RouteHandler<
   typeof usersGetRoute,
-  { Bindings: Env }
+  { Bindings: Env; Variables: AuthVariables }
 > = async (c) => {
   try {
     const db = createDb(c.env);
@@ -69,7 +69,7 @@ export const usersPostRoute = createRoute({
 });
 export const usersPostHandler: RouteHandler<
   typeof usersPostRoute,
-  { Bindings: Env }
+  { Bindings: Env; Variables: AuthVariables }
 > = async (c) => {
   try {
     const body = await c.req.json();
