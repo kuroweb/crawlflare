@@ -14,6 +14,7 @@ export async function serverApi(
     headers: {
       "Content-Type": "application/json",
       "Authorization": request.headers.get("Authorization") || "",
+      "Cookie": request.headers.get("Cookie") || "",
       ...options?.headers,
     },
   });

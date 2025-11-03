@@ -26,6 +26,7 @@ import {
   authLogoutRoute,
   authLogoutHandler,
 } from "./auth";
+import { authMiddleware } from "../middleware/auth";
 
 const ApiRouter = new OpenAPIHono<{ Bindings: Env }>();
 
@@ -37,10 +38,14 @@ ApiRouter.doc("/openapi.json", {
 
 ApiRouter.openapi(authLoginRoute, authLoginHandler);
 ApiRouter.openapi(authLogoutRoute, authLogoutHandler);
+
+ApiRouter.use("/users/*", authMiddleware());
 ApiRouter.openapi(usersGetRoute, usersGetHandler);
 ApiRouter.openapi(usersPostRoute, usersPostHandler);
 ApiRouter.openapi(usersPutRoute, usersPutHandler);
 ApiRouter.openapi(usersDeleteRoute, usersDeleteHandler);
+
+ApiRouter.use("/products/*", authMiddleware());
 ApiRouter.openapi(productsGetRoute, productsGetHandler);
 ApiRouter.openapi(productsPostRoute, productsPostHandler);
 ApiRouter.openapi(productsPutRoute, productsPutHandler);
