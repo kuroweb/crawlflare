@@ -2,97 +2,7 @@
 
 - 認証方式についての設計方針をまとめる
 
-# 現状把握
-
-## 認証機能
-
-### ログイン画面
-
-- ファイル:
-  - `apps/web/app/routes/admin.login.tsx`
-- 現在の実装方式:
-  - React Router の `action` 関数内で直接 DB 認証を実行
-- フロー:
-  1. フォームから `email` / `password` を受け取る
-  2. `verifyCredentials(db, email, password)` で DB を直接参照して認証
-  3. 認証成功時に `createLoginCookie()` で JWT を生成し、`Set-Cookie` ヘッダーで返却
-  4. `/` へリダイレクト
-- 問題点:
-  - フロントエンド（SSR）層で DB アクセスとビジネスロジックが混在
-  - API 層とフロント層の責務が分離されていない
-  - テスタビリティが低い
-
-### JWT 認証
-
-- ファイル:
-  - `apps/web/app/lib/login.ts`
-- トークン生成:
-  - `hono/jwt` の `sign()` を使用
-- 署名アルゴリズム:
-  - HS256
-- 有効期限:
-  - 24 時間
-- クッキー設定:
-  - `httpOnly: true` （XSS 対策）
-  - `sameSite: "Lax"` （CSRF 対策）
-  - `secure: import.meta.env.PROD` （本番環境のみ HTTPS）
-  - `path: "/"` （全パスで有効）
-- トークンペイロード:
-  - `{ exp, data: { userId } }`
-- シークレット:
-  - 環境変数 `LOGIN_JWT_SECRET` から取得
-
-### 認証状態チェック
-
-- ファイル:
-  - `apps/web/app/lib/isAuthenticated.ts`
-- 実装:
-  - `loader` 関数から呼び出し可能なユーティリティ
-- フロー:
-  1. Cookie ヘッダーから `login-token` を抽出
-  2. `hono/jwt` の `verify()` で JWT を検証
-  3. 検証成功時 `true`、失敗時 `false` を返却
-- 使用箇所:
-  - `admin.login.tsx`
-  - `admin.products.tsx`
-  - `admin.users.tsx`
-  - `home.tsx`
-
-### ログアウト
-
-- ファイル:
-  - `apps/web/app/routes/admin.logout.tsx`
-- 実装:
-  - `createLogoutCookie()` でクッキーを削除（`maxAge: 0`）
-- リダイレクト先:
-  - `/admin/login`
-
-### パスワード検証
-
-- ファイル:
-  - `apps/web/workers/models/users.ts`
-- 現在の実装:
-  - 平文比較 `rows[0].password === password`
-- TODO:
-  - ハッシュ化（`bcryptjs` など）への移行が必要
-
-  ```typescript
-  // TODO: パスワードはハッシュを保存し、ここで `bcryptjs` などで検証に置き換える
-  return rows[0].password === password;
-  ```
-
-### API
-
-- ディレクトリ:
-  - `apps/web/workers/api/`
-- 既存エンドポイント:
-  - `/api/users`, `/api/products` (GET, POST, PUT, DELETE)
-- 未実装:
-  - 認証関連エンドポイント（`/api/auth/login`, `/api/auth/logout`, `/api/auth/me` など）
-
 # 設計方針
-
-## 概要
 
 - `/api/auth/*` エンドポイントを新規実装
   - Zod でスキーマ定義
@@ -100,27 +10,30 @@
   - OpenAPI ドキュメント自動生成
 - React Router からは API 経由で認証を実行
 
-## 実行フロー
+# 実行フロー
 
-- ログインフロー:
-  1. ユーザーがログインフォームに email/password を入力して Submit
-  2. React Router の `action` が `/api/auth/login` に POST リクエスト
-  3. API が email/password を検証
-  4. 検証成功時、JWT を生成して `Set-Cookie` ヘッダーで返却
-  5. `action` が `Set-Cookie` ヘッダーを取得してリダイレクトレスポンスに転送
-  6. ブラウザが `/` にリダイレクトし、その際に `Set-Cookie` ヘッダーから Cookie を保存
+### ログインフロー
 
-- ログアウトフロー:
-  1. ユーザーがログアウトをクリック
-  2. React Router の `action` が Cookie を削除する `Set-Cookie` ヘッダーを返却
-  3. ブラウザが `/` にリダイレクトし、その際に `Set-Cookie` ヘッダーから Cookie を削除
+1. ユーザーがログインフォームに email/password を入力して Submit
+2. React Router の `action` が `/api/auth/login` に POST リクエスト
+3. API が email/password を検証
+4. 検証成功時、JWT を生成して `Set-Cookie` ヘッダーで返却
+5. `action` が `Set-Cookie` ヘッダーを取得してリダイレクトレスポンスに転送
+6. ブラウザが `/` にリダイレクトし、その際に `Set-Cookie` ヘッダーから Cookie を保存
 
-- 認証チェックフロー:
-  1. 各ページの `loader` が `isAuthenticated()` を呼び出し
-  2. Cookie から JWT を取得して検証
-  3. 検証成功時はページ表示、失敗時はログイン画面にリダイレクト
+### ログアウトフロー
 
-## 認証APIの設計
+1. ユーザーがログアウトをクリック
+2. React Router の `action` が Cookie を削除する `Set-Cookie` ヘッダーを返却
+3. ブラウザが `/` にリダイレクトし、その際に `Set-Cookie` ヘッダーから Cookie を削除
+
+### 認証チェックフロー
+
+1. 各ページの `loader` が `isAuthenticated()` を呼び出し
+2. Cookie から JWT を取得して検証
+3. 検証成功時はページ表示、失敗時はログイン画面にリダイレクト
+
+# 認証APIの設計
 
 ### ログイン API（ユーザー認証と JWT 発行）
 
@@ -150,11 +63,11 @@
   - ヘッダー: `Set-Cookie: login-token=<JWT>; HttpOnly; SameSite=Lax; Path=/; Max-Age=86400`
 - エラーレスポンス (401):
 
-    ```json
-    {
-      "error": "メールアドレスまたはパスワードが正しくありません"
-    }
-    ```
+  ```json
+  {
+    "error": "メールアドレスまたはパスワードが正しくありません"
+  }
+  ```
 
 - 実行フロー:
   1. リクエストボディから `email`, `password` を取得
@@ -183,7 +96,7 @@
   1. クッキーを削除する `Set-Cookie` ヘッダーを返却
   2. （オプション）JWT のブラックリスト管理（将来的に KV で実装可能）
 
-## リソース API での認証
+# リソース API での認証
 
 ### ログインチェック
 
