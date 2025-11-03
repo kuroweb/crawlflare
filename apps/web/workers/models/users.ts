@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
-import { users } from "../../db/schema";
-import type { Database } from "db/client";
+import { users } from "../db/schema";
+import type { Database } from "../db/client";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
 
 export type User = InferSelectModel<typeof users>;

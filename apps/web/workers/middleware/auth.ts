@@ -3,7 +3,7 @@ import { verify } from "hono/jwt";
 import type { MiddlewareHandler } from "hono";
 import * as usersModel from "../models/users";
 import type { User } from "../models/users";
-import { createDb } from "../../db/client";
+import { createDb } from "../db/client";
 
 export const LOGIN_COOKIE_NAME = "login-token";
 

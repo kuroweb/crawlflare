@@ -5,7 +5,7 @@ import {
   UserResponseSchema,
 } from "../schemas/users";
 import { ErrorResponseSchema } from "../schemas/common";
-import { createDb } from "../../db/client";
+import { createDb } from "../db/client";
 import {
   getAllUsers,
   createUser,

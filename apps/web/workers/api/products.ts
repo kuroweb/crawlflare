@@ -10,7 +10,7 @@ import {
   ValidationErrorResponseSchema,
   ErrorResponseSchema,
 } from "../schemas/common";
-import { createDb } from "../../db/client";
+import { createDb } from "../db/client";
 import {
   getAllProducts,
   createProduct,

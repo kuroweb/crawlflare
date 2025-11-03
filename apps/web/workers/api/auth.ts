@@ -1,6 +1,6 @@
 import { createRoute, type RouteHandler, z } from "@hono/zod-openapi";
 import { ErrorResponseSchema } from "../schemas/common";
-import { createDb } from "../../db/client";
+import { createDb } from "../db/client";
 import { findUserByEmail } from "../models/users";
 import { generateCookie } from "hono/cookie";
 import { sign } from "hono/jwt";
