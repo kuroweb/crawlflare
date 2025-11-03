@@ -13,6 +13,7 @@ import {
   updateUser,
   deleteUser,
 } from "../models/users";
+import type { AuthVariables } from "../middleware/auth";
 
 export const usersGetRoute = createRoute({
   method: "get",
@@ -107,6 +108,10 @@ export const usersPutRoute = createRoute({
       description: "Bad request",
       content: { "application/json": { schema: ErrorResponseSchema } },
     },
+    403: {
+      description: "Forbidden",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
     404: {
       description: "Not found",
       content: { "application/json": { schema: ErrorResponseSchema } },
@@ -119,12 +124,21 @@ export const usersPutRoute = createRoute({
 });
 export const usersPutHandler: RouteHandler<
   typeof usersPutRoute,
-  { Bindings: Env }
+  { Bindings: Env; Variables: AuthVariables }
 > = async (c) => {
   try {
     const id = Number(c.req.param("id"));
     if (Number.isNaN(id))
       return c.json({ error: "無効なIDです" } as const, 400);
+
+    const currentUser = c.get("currentUser");
+    if (currentUser.id !== id) {
+      return c.json(
+        { error: "他のユーザーの情報は更新できません" } as const,
+        403
+      );
+    }
+
     const body = await c.req.json();
     let input: z.infer<typeof UserFormRequestSchema>;
     try {
@@ -163,6 +177,10 @@ export const usersDeleteRoute = createRoute({
       description: "Bad request",
       content: { "application/json": { schema: ErrorResponseSchema } },
     },
+    403: {
+      description: "Forbidden",
+      content: { "application/json": { schema: ErrorResponseSchema } },
+    },
     404: {
       description: "Not found",
       content: { "application/json": { schema: ErrorResponseSchema } },
@@ -175,12 +193,18 @@ export const usersDeleteRoute = createRoute({
 });
 export const usersDeleteHandler: RouteHandler<
   typeof usersDeleteRoute,
-  { Bindings: Env }
+  { Bindings: Env; Variables: AuthVariables }
 > = async (c) => {
   try {
     const id = Number(c.req.param("id"));
     if (Number.isNaN(id))
       return c.json({ error: "無効なIDです" } as const, 400);
+
+    const currentUser = c.get("currentUser");
+    if (currentUser.id !== id) {
+      return c.json({ error: "他のユーザーは削除できません" } as const, 403);
+    }
+
     const db = createDb(c.env);
     const existing = await findUserById(db, id);
     if (!existing)
