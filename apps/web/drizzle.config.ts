@@ -24,7 +24,7 @@ function getSqlitePath(): string {
 export default (isProduction
   ? {
       schema: "./backend/db/schema.ts",
-      out: "./backend/migrations",
+      out: "./backend/db/migrations",
       dialect: "sqlite",
       driver: "d1-http",
       dbCredentials: {
@@ -37,7 +37,7 @@ export default (isProduction
     }
   : {
       schema: "./backend/db/schema.ts",
-      out: "./backend/migrations",
+      out: "./backend/db/migrations",
       dialect: "sqlite",
       dbCredentials: {
         url: getSqlitePath(),
