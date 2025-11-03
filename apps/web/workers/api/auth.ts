@@ -5,6 +5,7 @@ import { findUserByEmail } from "../models/users";
 import { generateCookie } from "hono/cookie";
 import { sign } from "hono/jwt";
 import { LOGIN_COOKIE_NAME, type AuthVariables } from "../middleware/auth";
+import * as bcrypt from "bcryptjs";
 
 const LoginRequestSchema = z.object({
   email: z.string(),
@@ -68,8 +69,8 @@ export const authLoginHandler: RouteHandler<
       );
     }
 
-    // TODO: パスワード検証を bcryptjs に置き換える
-    if (user.password !== input.password) {
+    const isValidPassword = await bcrypt.compare(input.password, user.password);
+    if (!isValidPassword) {
       return c.json(
         { error: "メールアドレスまたはパスワードが正しくありません" } as const,
         401

@@ -14,6 +14,7 @@ import {
   deleteUser,
 } from "../models/users";
 import type { AuthVariables } from "../middleware/auth";
+import * as bcrypt from "bcryptjs";
 
 export const usersGetRoute = createRoute({
   method: "get",
@@ -82,7 +83,8 @@ export const usersPostHandler: RouteHandler<
       throw e;
     }
     const db = createDb(c.env);
-    const user = await createUser(db, input);
+    const hashedPassword = await bcrypt.hash(input.password, 10);
+    const user = await createUser(db, { ...input, password: hashedPassword });
     return c.json({ success: true, data: user } as const, 200);
   } catch (error) {
     console.error("Error creating user:", error);
@@ -152,7 +154,8 @@ export const usersPutHandler: RouteHandler<
     const existing = await findUserById(db, id);
     if (!existing)
       return c.json({ error: "ユーザーが見つかりません" } as const, 404);
-    const user = await updateUser(db, id, input);
+    const hashedPassword = await bcrypt.hash(input.password, 10);
+    const user = await updateUser(db, id, { ...input, password: hashedPassword });
     return c.json({ success: true, data: user } as const, 200);
   } catch (error) {
     console.error("Error updating user:", error);
