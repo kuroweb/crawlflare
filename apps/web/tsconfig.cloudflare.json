@@ -2,27 +2,35 @@
   "extends": "./tsconfig.json",
   "include": [
     ".react-router/types/**/*",
-    "app/**/*",
-    "app/**/.server/**/*",
-    "app/**/.client/**/*",
-    "workers/**/*",
-    "db/**/*",
+    "frontend/**/*",
+    "backend/**/*",
     "worker-configuration.d.ts"
-, "db"  ],
+  ],
   "compilerOptions": {
     "checkJs": false,
     "composite": true,
     "strict": true,
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "types": ["vite/client"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2022"
+    ],
+    "types": [
+      "vite/client"
+    ],
     "target": "ES2022",
     "module": "ES2022",
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "baseUrl": ".",
-    "rootDirs": [".", "./.react-router/types"],
+    "rootDirs": [
+      ".",
+      "./.react-router/types"
+    ],
     "paths": {
-      "~/*": ["./app/*"]
+      "~/*": [
+        "./frontend/*"
+      ]
     },
     "esModuleInterop": true,
     "resolveJsonModule": true

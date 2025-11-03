@@ -6,7 +6,7 @@
     "nodejs_compat",
     "global_fetch_strictly_public"
   ],
-  "main": "./workers/app.ts",
+  "main": "./backend/app.ts",
   "d1_databases": [
     {
       "binding": "DB",

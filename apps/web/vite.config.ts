@@ -7,7 +7,7 @@ import tsconfigPaths from "vite-tsconfig-paths";
 import { getPlatformProxy, unstable_getVarsForDev } from "wrangler";
 
 // Entry file
-const entry = "./workers/app.ts";
+const entry = "./backend/app.ts";
 
 // Prevent tampering with Hono's Cloudflare parameters executed by default
 const adapter: typeof cloudflareAdapter = async (options) => {
