@@ -34,5 +34,3 @@ lerna-debug.log*
 
 # misc
 .DS_Store
-
-.cursor/rules/
