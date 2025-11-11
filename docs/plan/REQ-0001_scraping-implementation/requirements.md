@@ -66,7 +66,7 @@ mercari_crawl_results:
 - `external_id`: text (NOT NULL) - メルカリ商品ID（外部システムのID）
 - `name`: text (NOT NULL) - 商品名
 - `price`: integer (NOT NULL) - 価格
-- `product_url`: text (NOT NULL) - 商品URL
+- `selling_url`: text (NOT NULL) - 商品URL
 - `image_url`: text (NOT NULL) - 商品画像URL
 - `status`: text - 商品ステータス（販売中、売り切れ、削除など）
 - `sold_out_at`: text - 売り切れ日時（売り切れになった日時を記録）
