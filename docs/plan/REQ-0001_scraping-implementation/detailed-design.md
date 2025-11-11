@@ -26,7 +26,7 @@
 | `image_url` | text | あり | - | - | 商品画像URL |
 | `selling_status` | integer | あり | - | - | 販売ステータス（1: 販売中、2: 売り切れ） |
 | `seller_type` | integer | あり | - | - | 出品者タイプ（1: 一般ユーザー、2: ショップ） |
-| `seller_id` | text | なし | - | - | 出品者ID（seller_typeに応じて一般ユーザーIDまたはショップID） |
+| `seller_id` | text | あり | - | - | 出品者ID（seller_typeに応じて一般ユーザーIDまたはショップID） |
 | `sold_out_at` | text | なし | - | - | 売り切れ日時 |
 | `created_at` | text | あり | - | CURRENT_TIMESTAMP | 作成日時 |
 | `updated_at` | text | あり | - | CURRENT_TIMESTAMP | 更新日時 |
