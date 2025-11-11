@@ -95,7 +95,7 @@ erDiagram
 1. 実行開始（Cron Trigger）
 2. enabled=trueの計測設定を取得
 3. 各計測設定に対して以下を実行:
-   - 検索画面クローリング用のメッセージをキューにエンキュー（`listCrawl` タイプ）
+   - 検索画面クローリング用のメッセージを `mercari-list-crawl-queue` にエンキュー
 
 ### キューから取り出されたメッセージ（listCrawl）実行時
 
@@ -108,15 +108,15 @@ erDiagram
    - 計測設定とマッチしないレコードを物理削除
 5. `syncForExistence`:
    - 検索結果に含まれない販売中商品（`selling_status=1`）のリストを取得
-   - 各商品をキューにエンキュー（`syncDetail` タイプ）
+   - 各商品を `mercari-detail-crawl-queue` にエンキュー
 6. `syncForSoldOutAt`:
    - 売り切れ日が未設定の売り切れ商品（`selling_status=2`かつ`sold_out_at=NULL`）のリストを取得
-   - 各商品をキューにエンキュー（`syncDetail` タイプ）
+   - 各商品を `mercari-detail-crawl-queue` にエンキュー
 
-### キューから取り出されたメッセージ（syncDetail）実行時
+### キューから取り出されたメッセージ（detailCrawl）実行時
 
 1. メッセージから商品IDを取得
-2. `detail/syncer.ts` の `syncDetail` を実行
+2. `detail/syncer.ts` の `detailCrawl` を実行
 3. 詳細ページでクロールして、商品の状態に応じて適切に処理（存在確認・価格・ステータス同期/物理削除、または売り切れ日更新）
 
 ### 手動実行時
@@ -126,7 +126,7 @@ erDiagram
 3. 各計測設定に対して以下を実行（同期的に実行）:
    - 検索画面をスクレイピング（初回は全ページ、それ以外は2-3ページ）
    - `upsert`、`inspect`、`syncForExistence`、`syncForSoldOutAt` を順次実行
-   - `syncForExistence`と`syncForSoldOutAt`は、対象商品を`syncDetail`タイプでキューにエンキュー（非同期処理）
+   - `syncForExistence`と`syncForSoldOutAt`は、対象商品を`mercari-detail-crawl-queue`にエンキュー（非同期処理）
 
 ## シーケンス図
 
@@ -143,7 +143,7 @@ sequenceDiagram
   Job->>DB: 計測設定取得
   DB-->>Job: 設定リスト
   loop 計測設定ごとに
-    Job->>Queue: エンキュー（listCrawl）
+    Job->>Queue: エンキュー（mercari-list-crawl-queue）
   end
 ```
 
@@ -157,7 +157,7 @@ sequenceDiagram
   participant DB as DB
   participant Mercari as メルカリ
 
-  Queue->>Job: メッセージ取得（listCrawl）
+  Queue->>Job: メッセージ取得（mercari-list-crawl-queue）
   Job->>Crawler: 検索画面スクレイピング
   Crawler->>Mercari: 検索画面取得
   Mercari-->>Crawler: HTML
@@ -169,14 +169,14 @@ sequenceDiagram
   Job->>DB: DBとの比較
   DB-->>Job: 比較結果
     alt 検索結果に存在しない<br>販売中商品がある
-      Job->>Queue: エンキュー（syncDetail）
+      Job->>Queue: エンキュー（mercari-detail-crawl-queue）
     end
     alt 売り切れ日が未設定の<br>売り切れ商品がある
-      Job->>Queue: エンキュー（syncDetail）
+      Job->>Queue: エンキュー（mercari-detail-crawl-queue）
     end
 ```
 
-### キューから取り出されたメッセージ（syncDetail）実行時
+### キューから取り出されたメッセージ（detailCrawl）実行時
 
 ```mermaid
 sequenceDiagram
@@ -186,7 +186,7 @@ sequenceDiagram
   participant DB as DB
   participant Mercari as メルカリ
 
-  Queue->>Job: メッセージ取得（syncDetail）
+  Queue->>Job: メッセージ取得（mercari-detail-crawl-queue）
   Job->>Crawler: 詳細ページクロール
   Crawler->>Mercari: 詳細ページ取得
   Mercari-->>Crawler: HTML
@@ -202,38 +202,51 @@ sequenceDiagram
 
 ### キュー名
 
-- `mercari-crawl-queue`: メルカリクロール用のキュー
+- `mercari-list-crawl-queue`: メルカリリストクロール用のキュー
+- `mercari-detail-crawl-queue`: メルカリ詳細クロール用のキュー
+- ジョブの種類（リストクロール、詳細クロール）とキューの種類を一致させる
 
 ### メッセージ型定義
 
 ```typescript
-type CrawlQueueMessage = 
-  | { type: 'listCrawl'; productId: number }
-  | { type: 'syncDetail'; mercariCrawlResultId: number };
+// mercari-list-crawl-queue 用
+type ListCrawlMessage = { productId: number };
+
+// mercari-detail-crawl-queue 用
+type DetailCrawlMessage = { mercariCrawlResultId: number };
 ```
 
 ### エンキュー処理
 
-- Cron Trigger実行時: `jobs/crawl.ts` の `executeCrawlJob` で、各計測設定の `listCrawl` メッセージをキューにエンキュー
-- `list/syncer.ts` の `syncForExistence` と `syncForSoldOutAt` で、対象商品のIDをキューにエンキュー（どちらも `syncDetail` タイプ）
-- エンキュー対象の絞り込み方法は異なるが、エンキューするジョブは同じ（`syncDetail`）
-- `env.QUEUE.send()` を使用してメッセージを送信
+- Cron Trigger実行時:
+  - `jobs/crawl.ts` の `executeCrawlJob` で、各計測設定のメッセージを `mercari-list-crawl-queue` にエンキュー
+- `list/syncer.ts` の `syncForExistence` と `syncForSoldOutAt`:
+  - 対象商品のIDを `mercari-detail-crawl-queue` にエンキュー
+- エンキュー対象の絞り込み方法は異なるが、エンキューするキューは同じ（`mercari-detail-crawl-queue`）
+- `env.QUEUE_LIST.send()` と `env.QUEUE_DETAIL.send()` を使用してメッセージを送信
 - バッチ送信（`sendBatch`）を利用して効率化
-- `env` の型定義（`worker-configuration.d.ts`）に `QUEUE: Queue<CrawlQueueMessage>` を追加
+- `env` の型定義（`worker-configuration.d.ts`）に追加:
+  - `QUEUE_LIST: Queue<ListCrawlMessage>`
+  - `QUEUE_DETAIL: Queue<DetailCrawlMessage>`
 
 ### キューコンシューマー
 
-- `app.ts` の `queue` ハンドラーでメッセージを受信
+- `app.ts` の `queue` ハンドラーでメッセージを受信:
+  - キューごとに別々のハンドラー
+- `mercari-list-crawl-queue` のハンドラー:
+  - `list/crawler.ts` と `list/syncer.ts` を実行
+- `mercari-detail-crawl-queue` のハンドラー:
+  - `detail/syncer.ts` の `detailCrawl` を実行（商品の状態に応じて適切に処理）
 - `MessageBatch` からメッセージを取得
-- メッセージタイプに応じて処理を分岐:
-  - `listCrawl`: `list/crawler.ts` と `list/syncer.ts` を実行
-  - `syncDetail`: `detail/syncer.ts` の `syncDetail` を実行（商品の状態に応じて適切に処理）
 - エラー発生時は自動リトライ（Cloudflare Queuesの標準機能）
 
 ### 設定
 
-- `wrangler.jsonc` に `queues.producers` と `queues.consumers` を追加
-- 環境変数でキュー名を指定（開発環境と本番環境で分離可能）
+- `wrangler.jsonc` に `queues.producers` と `queues.consumers` を追加:
+  - `mercari-list-crawl-queue` の producer と consumer
+  - `mercari-detail-crawl-queue` の producer と consumer
+- 環境変数でキュー名を指定:
+  - 開発環境と本番環境で分離可能
 
 # 変更対象ファイル・関数
 
@@ -316,11 +329,13 @@ backend/
 
 実装内容:
 
-- `syncDetail(db, mercariCrawlResult)`:
+- `detailCrawl(db, mercariCrawlResult)`:
   - キューから取り出された個別の商品に対して実行
   - 詳細ページでクロールして、商品の状態に応じて適切に処理
-  - 販売中商品（`selling_status=1`）の場合: 存在確認・価格・ステータス同期/物理削除
-  - 売り切れ商品（`selling_status=2`かつ`sold_out_at=NULL`）の場合: 売り切れ日更新
+  - 販売中商品（`selling_status=1`）の場合:
+    - 存在確認・価格・ステータス同期/物理削除
+  - 売り切れ商品（`selling_status=2`かつ`sold_out_at=NULL`）の場合:
+    - 売り切れ日更新
 
 ### `backend/models/mercariCrawlResults.ts`
 
@@ -365,14 +380,15 @@ backend/
 
 - `executeCrawlJob(env)`:
   - Cron Triggerから呼び出されるメイン関数
-  - enabled=trueの計測設定を取得し、各設定の`listCrawl`メッセージをキューにエンキュー
+  - enabled=trueの計測設定を取得し、各設定のメッセージを`mercari-list-crawl-queue`にエンキュー
 - `getEnabledCrawlSettings(db)`:
   - enabled=trueの設定を取得（productsとmercari_crawl_settingsをJOIN）
-- `processCrawlQueue(batch, env)`:
-  - キューから取り出されたメッセージを処理
-  - メッセージタイプに応じて処理を分岐:
-    - `listCrawl`: `list/crawler.ts`でデータ構築後、`list/syncer.ts`を実行
-    - `syncDetail`: `detail/syncer.ts`の`syncDetail`を実行（商品の状態に応じて適切に処理）
+- `processListCrawlQueue(batch, env)`:
+  - `mercari-list-crawl-queue` から取り出されたメッセージを処理
+  - `list/crawler.ts`でデータ構築後、`list/syncer.ts`を実行
+- `processDetailCrawlQueue(batch, env)`:
+  - `mercari-detail-crawl-queue` から取り出されたメッセージを処理
+  - `detail/syncer.ts`の`detailCrawl`を実行（商品の状態に応じて適切に処理）
 
 ### `backend/schemas/mercariCrawlResults.ts`
 
@@ -414,8 +430,11 @@ backend/
 
 - `export const scheduled` ハンドラーを追加
 - `backend/jobs/crawl.ts` の `executeCrawlJob` を呼び出す（エンキュー処理のみ）
-- `export const queue` ハンドラーを追加
-- `backend/jobs/crawl.ts` の `processCrawlQueue` を呼び出す
+- `export const queue` ハンドラーを追加（キューごとに別々のハンドラー）
+- `mercari-list-crawl-queue` のハンドラー:
+  - `backend/jobs/crawl.ts` の `processListCrawlQueue` を呼び出す
+- `mercari-detail-crawl-queue` のハンドラー:
+  - `backend/jobs/crawl.ts` の `processDetailCrawlQueue` を呼び出す
 - 実装初期段階では手動実行のみ、後でCron実行を追加
 
 ### `backend/api/index.ts`
@@ -441,8 +460,8 @@ backend/
 
 - `triggers.crons` に `"0 * * * *"`（1時間ごと）を追加
 - 実装初期段階では設定しない（手動実行のみ）
-- `queues.producers` に `mercari-crawl-queue` を追加（キューへの送信権限）
-- `queues.consumers` に `mercari-crawl-queue` を追加（キューからの受信権限）
+- `queues.producers` に `mercari-list-crawl-queue` と `mercari-detail-crawl-queue` を追加（キューへの送信権限）
+- `queues.consumers` に `mercari-list-crawl-queue` と `mercari-detail-crawl-queue` を追加（キューからの受信権限）
 
 # 実装順序
 
@@ -499,10 +518,14 @@ backend/
 
 # 画面設計方針
 
-- 不要: バックグラウンド処理のため、直接的な画面変更は不要
-- 将来の拡張: クロール結果を表示する画面が必要になる可能性あり（別要件として検討）
+- 不要:
+  - バックグラウンド処理のため、直接的な画面変更は不要
+- 将来の拡張:
+  - クロール結果を表示する画面が必要になる可能性あり（別要件として検討）
 
 # 未確定事項
 
-- ban対策: VPS経由のスクレイピング実装（要検討）
-- データ保持期間: 無期限としているが、データ量の増加にともない要検討
+- ban対策:
+  - VPS経由のスクレイピング実装（要検討）
+- データ保持期間:
+  - 無期限としているが、データ量の増加にともない要検討
