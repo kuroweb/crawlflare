@@ -262,7 +262,7 @@ type DetailCrawlMessage = { mercariCrawlResultId: number };
 ### エンキュー処理
 
 - Cron Trigger実行時:
-  - `jobs/crawl.ts` の `executeCrawlJob` で、各計測設定のメッセージを `mercari-list-crawl-queue` にエンキュー
+  - `jobs/listCrawl.ts` の `executeCrawlJob` で、各計測設定のメッセージを `mercari-list-crawl-queue` にエンキュー
 - `list/syncer.ts` の `syncForExistence` と `syncForSoldOutAt`:
   - 対象商品のIDを `mercari-detail-crawl-queue` にエンキュー
 - エンキュー対象の絞り込み方法は異なるが、エンキューするキューは同じ（`mercari-detail-crawl-queue`）
@@ -311,7 +311,8 @@ backend/
 │   ├── crawl.ts                 # 【🟢追加】クロールAPI
 │   └── index.ts                 # 【変更】ルート追加
 ├── jobs/
-│   └── crawl.ts                 # 【🟢追加】Cronジョブ実行処理
+│   ├── listCrawl.ts             # 【🟢追加】リストクロールジョブ実行処理
+│   └── detailCrawl.ts           # 【🟢追加】詳細クロールジョブ実行処理
 ├── schemas/
 │   └── mercariCrawlResults.ts   # 【🟢追加】クロール結果スキーマ
 ├── db/
@@ -418,10 +419,11 @@ backend/
 - OpenAPIHono形式で実装
 - 認証ミドルウェア適用
 
-### `backend/jobs/crawl.ts`
+### `backend/jobs/listCrawl.ts`
 
 変更概要:
 
+- リストクロール用のジョブ実行処理
 - Cron Trigger用のジョブ実行処理（エンキュー処理のみ）
 - キュー処理用のジョブ実行処理
 
@@ -435,6 +437,16 @@ backend/
 - `processListCrawlQueue(batch, env)`:
   - `mercari-list-crawl-queue` から取り出されたメッセージを処理
   - `list/crawler.ts`でデータ構築後、`list/syncer.ts`を実行
+
+### `backend/jobs/detailCrawl.ts`
+
+変更概要:
+
+- 詳細クロール用のジョブ実行処理
+- キュー処理用のジョブ実行処理
+
+実装内容:
+
 - `processDetailCrawlQueue(batch, env)`:
   - `mercari-detail-crawl-queue` から取り出されたメッセージを処理
   - `detail/syncer.ts`の`detailCrawl`を実行（商品の状態に応じて適切に処理）
@@ -478,12 +490,12 @@ backend/
 変更内容:
 
 - `export const scheduled` ハンドラーを追加
-- `backend/jobs/crawl.ts` の `executeCrawlJob` を呼び出す（エンキュー処理のみ）
+- `backend/jobs/listCrawl.ts` の `executeCrawlJob` を呼び出す（エンキュー処理のみ）
 - `export const queue` ハンドラーを追加（キューごとに別々のハンドラー）
 - `mercari-list-crawl-queue` のハンドラー:
-  - `backend/jobs/crawl.ts` の `processListCrawlQueue` を呼び出す
+  - `backend/jobs/listCrawl.ts` の `processListCrawlQueue` を呼び出す
 - `mercari-detail-crawl-queue` のハンドラー:
-  - `backend/jobs/crawl.ts` の `processDetailCrawlQueue` を呼び出す
+  - `backend/jobs/detailCrawl.ts` の `processDetailCrawlQueue` を呼び出す
 - 実装初期段階では手動実行のみ、後でCron実行を追加
 
 ### `backend/api/index.ts`
@@ -552,8 +564,10 @@ backend/
 - `upsert`、`inspect`、`syncForExistence` 関数を実装
 - `backend/services/mercari/detail/syncer.ts` を作成
 - `detailCrawl` 関数を実装
-- `backend/jobs/crawl.ts` を作成
-- `processListCrawlQueue` と `processDetailCrawlQueue` 関数を実装
+- `backend/jobs/listCrawl.ts` を作成
+- `executeCrawlJob` と `processListCrawlQueue` 関数を実装
+- `backend/jobs/detailCrawl.ts` を作成
+- `processDetailCrawlQueue` 関数を実装
 
 ### キュー設定の実装
 
@@ -571,7 +585,7 @@ backend/
 ### scheduledハンドラーの実装
 
 - `backend/app.ts` に `scheduled` ハンドラーを追加
-- `backend/jobs/crawl.ts` の `executeCrawlJob` を呼び出す
+- `backend/jobs/listCrawl.ts` の `executeCrawlJob` を呼び出す
 
 ### エラーハンドリング強化
 
