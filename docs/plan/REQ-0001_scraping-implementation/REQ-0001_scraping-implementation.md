@@ -221,6 +221,22 @@ sequenceDiagram
   Job->>DB: 商品の状態に応じて適切に処理<br>（存在確認・価格・ステータス同期/物理削除、または売り切れ日更新）
 ```
 
+# スクレイピング技術スタック
+
+## Cloudflare Browser Renderingの利用
+
+- CloudflareのBrowser RenderingでPlaywrightを使用してスクレイピングを実装
+- JavaScriptレンダリングが必要なページに対応可能
+- Cloudflare Workersから直接利用可能
+
+## 実装方針
+
+- `backend/services/mercari/list/crawler.ts` と `backend/services/mercari/detail/crawler.ts` でBrowser Rendering APIを呼び出し
+- Playwrightを使用してHTMLを取得し、必要なデータを抽出
+- `env.BROWSER` を使用してBrowser Renderingにアクセス
+- `worker-configuration.d.ts` に型定義を追加:
+  - `BROWSER: Fetcher`
+
 # 非同期ジョブ設計
 
 ## Cloudflare Queuesの利用
@@ -310,10 +326,13 @@ backend/
 変更概要:
 
 - メルカリ検索画面のスクレイピング処理（データ構築のみ、DBには触らない）
+- Cloudflare Browser Rendering（Playwright）を使用
 
 実装内容:
 
-- `crawlMercariList(product, isFirstRun)`:
+- `crawlMercariList(product, isFirstRun, env)`:
+  - Cloudflare Browser Rendering APIを呼び出し
+  - Playwrightを使用して検索画面のHTMLを取得
   - 検索画面のスクレイピング（初回は全ページ、それ以外は2〜3ページ）
   - 戻り値: 検索結果データ
 
@@ -341,10 +360,13 @@ backend/
 変更概要:
 
 - メルカリ詳細画面のスクレイピング処理（データ構築のみ、DBには触らない）
+- Cloudflare Browser Rendering（Playwright）を使用
 
 実装内容:
 
-- `crawlMercariDetail(mercariCrawlResult)`:
+- `crawlMercariDetail(mercariCrawlResult, env)`:
+  - Cloudflare Browser Rendering APIを呼び出し
+  - Playwrightを使用して商品詳細画面のHTMLを取得
   - 商品詳細画面のスクレイピング（存在確認・売り切れ日取得）
   - 戻り値: 商品詳細データ
 
@@ -482,6 +504,7 @@ backend/
 
 - Cron Trigger設定の追加
 - キュー設定の追加
+- Browser Rendering設定の追加
 
 変更内容:
 
@@ -489,6 +512,7 @@ backend/
 - 実装初期段階では設定しない（手動実行のみ）
 - `queues.producers` に `mercari-list-crawl-queue` と `mercari-detail-crawl-queue` を追加（キューへの送信権限）
 - `queues.consumers` に `mercari-list-crawl-queue` と `mercari-detail-crawl-queue` を追加（キューからの受信権限）
+- `browser` バインディングを追加（Browser Rendering用）
 
 # 実装順序
 
@@ -499,12 +523,17 @@ backend/
 - `backend/db/schema.ts` に `mercariCrawlResults` テーブル定義を追加
 - マイグレーションファイル生成・実行
 
+### Browser Rendering設定
+
+- `wrangler.jsonc` にBrowser Renderingのバインディングを追加
+- `worker-configuration.d.ts` に型定義を追加
+
 ### スクレイピング処理の実装
 
 - `backend/services/mercari/list/crawler.ts` を作成
 - `backend/services/mercari/detail/crawler.ts` を作成
-- 検索画面スクレイピング機能を実装
-- 商品詳細画面スクレイピング機能を実装
+- Cloudflare Browser Rendering APIを使用して検索画面スクレイピング機能を実装
+- Cloudflare Browser Rendering APIを使用して商品詳細画面スクレイピング機能を実装
 
 ### データモデル層の実装
 
@@ -556,13 +585,14 @@ backend/
 | タスク | 工数（時間） | 備考 |
 |--------|------------|------|
 | データベーススキーマ作成 | 2h | テーブル定義、マイグレーション |
-| スクレイピング処理の実装 | 16h | リスト・詳細画面のスクレイピング実装 |
+| Browser Rendering設定 | 2h | wrangler.jsonc設定、型定義追加 |
+| スクレイピング処理の実装 | 16h | リスト・詳細画面のスクレイピング実装（Browser Rendering使用） |
 | データモデル層の実装 | 4h | CRUD操作の実装 |
 | 手動実行APIの実装 | 4h | APIエンドポイントの実装 |
 | 検索結果とDBの比較処理実装 | 12h | syncer実装、キューエンキュー処理 |
 | キュー設定の実装 | 4h | wrangler.jsonc設定、queueハンドラー |
 | テスト・デバッグ | 8h | 動作確認、バグ修正 |
-| **合計** | **50h** | **約6.25人日** |
+| **合計** | **52h** | **約6.5人日** |
 
 ## Phase 2: Cron実行機能の追加（最終段階）
 
@@ -576,7 +606,7 @@ backend/
 
 ## 総工数
 
-- **Phase 1 + Phase 2**: 60h（約7.5人日）
+- **Phase 1 + Phase 2**: 62h（約7.75人日）
 
 # 安全にリリースするための段階的な機能アップデート方針
 
@@ -621,8 +651,8 @@ backend/
 # 未確定事項 & TODO
 
 - 【要確認】ban対策:
-  - VPS経由のスクレイピング実装（要検討）
-  - 現時点では直接実装を想定
+  - Cloudflare Browser Renderingを使用することで、IPアドレスがCloudflare側で管理される
+  - 必要に応じてVPS経由の実装を検討（現時点ではBrowser Renderingで対応）
 - 【要確認】データ保持期間:
   - 無期限としているが、データ量の増加にともない要検討
   - 将来的にデータ削除ポリシーの検討が必要
