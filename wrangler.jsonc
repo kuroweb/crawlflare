@@ -21,6 +21,9 @@
     "directory": "./build/client",
     "binding": "ASSETS"
   },
+  "browser": {
+    "binding": "BROWSER"
+  },
   "observability": {
     "enabled": true
   }
