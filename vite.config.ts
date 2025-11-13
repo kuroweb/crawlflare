@@ -33,14 +33,14 @@ export default defineConfig({
       externalConditions: ["worker"],
     },
   },
-  // 開発環境ではbuild/clientから静的アセットを配信
-  publicDir: "build/client",
   plugins: [
     serverAdapter({
       adapter,
       entry,
       exclude: [
         ...defaultOptions.exclude,
+        /(\.webp|png|svg)(\?.*)?$/,
+        /\?import(\&.*)?$/, // development adjustment
       ],
       // HMR adjustment
       handleHotUpdate: ({ server, modules }) => {
