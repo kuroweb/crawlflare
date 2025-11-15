@@ -35,6 +35,16 @@ app.use("*", async (c, next) => {
 app.route("/api", ApiRouter);
 
 // React Router
-app.use("*", reactRouterHandler());
+app.use(async (c) => {
+  // @ts-ignore
+  const requestHandler = createRequestHandler(
+    // @ts-ignore
+    () => import("../build/server/index.js"),
+    import.meta.env?.MODE
+  );
+  return requestHandler(c.req.raw, {
+    cloudflare: { env: c.env, ctx: c.executionCtx },
+  });
+});
 
 export default app;
