@@ -58,6 +58,28 @@ const Sidebar = ({ open, setOpen, authenticated }: Props) => {
                   <span className="ml-3">ユーザー管理</span>
                 </Link>
               </li>
+              <li>
+                <Link
+                  to="/admin/crawl"
+                  className="group flex items-center rounded-lg px-4 py-2 text-base font-normal hover:bg-base-100"
+                >
+                  <svg
+                    className="group-hover size-6 text-gray-500 transition duration-75"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                  <span className="ml-3">クロール実行</span>
+                </Link>
+              </li>
               <li className="px-4">
                 <span className="text-base font-normal text-gray-500">
                   - アカウント -

@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "crawlflare",
-  "compatibility_date": "2025-09-01",
+  "compatibility_date": "2025-09-15",
   "compatibility_flags": [
     "nodejs_compat",
     "global_fetch_strictly_public"
@@ -23,6 +23,30 @@
   },
   "browser": {
     "binding": "BROWSER"
+  },
+  "queues": {
+    "producers": [
+      {
+        "queue": "mercari-list-crawl-queue",
+        "binding": "QUEUE_MERCARI_LIST"
+      },
+      {
+        "queue": "mercari-detail-crawl-queue",
+        "binding": "QUEUE_MERCARI_DETAIL"
+      }
+    ],
+    "consumers": [
+      {
+        "queue": "mercari-list-crawl-queue",
+        "max_batch_size": 10,
+        "max_batch_timeout": 30
+      },
+      {
+        "queue": "mercari-detail-crawl-queue",
+        "max_batch_size": 10,
+        "max_batch_timeout": 30
+      }
+    ]
   },
   "observability": {
     "enabled": true

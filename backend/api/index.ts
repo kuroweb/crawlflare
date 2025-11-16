@@ -26,6 +26,12 @@ import {
   authLogoutRoute,
   authLogoutHandler,
 } from "./auth";
+import {
+  crawlExecuteRoute,
+  crawlExecuteHandler,
+  crawlResultsRoute,
+  crawlResultsHandler,
+} from "./crawl";
 import { authMiddleware, type AuthVariables } from "../middleware/auth";
 
 const ApiRouter = new OpenAPIHono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -50,6 +56,10 @@ ApiRouter.openapi(productsGetRoute, productsGetHandler);
 ApiRouter.openapi(productsPostRoute, productsPostHandler);
 ApiRouter.openapi(productsPutRoute, productsPutHandler);
 ApiRouter.openapi(productsDeleteRoute, productsDeleteHandler);
+
+ApiRouter.use("/crawl/*", authMiddleware());
+ApiRouter.openapi(crawlExecuteRoute, crawlExecuteHandler);
+ApiRouter.openapi(crawlResultsRoute, crawlResultsHandler);
 
 ApiRouter.get("/docs", swaggerUI({ url: "/api/openapi.json" }));
 

@@ -5,7 +5,8 @@ import { requestId } from "hono/request-id";
 import type { RequestIdVariables } from "hono/request-id";
 import ApiRouter from "./api";
 import { jsonLogger } from "./middleware/logger";
-import { reactRouterHandler } from "./middleware/react-router";
+import { handleQueueEvent } from "./jobs/queue";
+import { createRequestHandler } from "react-router";
 
 declare module "react-router" {
   export interface AppLoadContext {
@@ -47,4 +48,7 @@ app.use(async (c) => {
   });
 });
 
-export default app;
+export default {
+  fetch: app.fetch.bind(app),
+  queue: handleQueueEvent,
+};
