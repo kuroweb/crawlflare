@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { users } from "../db/schema";
 import type { Database } from "../db/client";
 import type { InferSelectModel, InferInsertModel } from "drizzle-orm";
@@ -54,7 +54,7 @@ export async function updateUser(
     .set({
       email: userData.email,
       password: userData.password,
-      updatedAt: new Date().toISOString(),
+      updatedAt: sql`(CURRENT_TIMESTAMP)`,
     })
     .where(eq(users.id, id))
     .returning();

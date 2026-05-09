@@ -26,6 +26,7 @@ export async function clientApi(
 ): Promise<Response> {
   return fetch(path, {
     ...options,
+    credentials: "include", // Cookieを自動的に送信
     headers: {
       "Content-Type": "application/json",
       ...options?.headers,

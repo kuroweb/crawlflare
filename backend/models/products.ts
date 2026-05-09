@@ -1,7 +1,7 @@
 import { products, mercariCrawlSettings } from "../db/schema";
 import type { Database } from "../db/client";
 import type { InferSelectModel } from "drizzle-orm";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 export type Product = InferSelectModel<typeof products>;
 export type MercariCrawlSetting = InferSelectModel<typeof mercariCrawlSettings>;
@@ -63,7 +63,7 @@ export async function createMercariCrawlSetting(
   data: {
     productId: number;
     keyword: string;
-    categoryId?: number;
+    categoryId?: number | null;
     minPrice: number;
     maxPrice: number;
     enabled: boolean;
@@ -91,7 +91,7 @@ export async function updateProduct(
     name: string;
     mercariSettings?: {
       keyword: string;
-      categoryId?: number;
+      categoryId?: number | null;
       minPrice: number;
       maxPrice: number;
       enabled: boolean;
@@ -102,7 +102,7 @@ export async function updateProduct(
     .update(products)
     .set({
       name: data.name,
-      updatedAt: new Date().toISOString(),
+      updatedAt: sql`(CURRENT_TIMESTAMP)`,
     })
     .where(eq(products.id, id))
     .returning();
@@ -138,22 +138,34 @@ export async function updateMercariCrawlSetting(
   productId: number,
   data: {
     keyword: string;
-    categoryId?: number;
+    categoryId?: number | null;
     minPrice: number;
     maxPrice: number;
     enabled: boolean;
   }
 ): Promise<MercariCrawlSetting> {
+  const updateData: {
+    keyword: string;
+    minPrice: number;
+    maxPrice: number;
+    enabled: boolean;
+    updatedAt: ReturnType<typeof sql>;
+    categoryId?: number | null;
+  } = {
+    keyword: data.keyword,
+    minPrice: data.minPrice,
+    maxPrice: data.maxPrice,
+    enabled: data.enabled,
+    updatedAt: sql`(CURRENT_TIMESTAMP)`,
+  };
+
+  if (data.categoryId !== undefined) {
+    updateData.categoryId = data.categoryId;
+  }
+
   const result = await db
     .update(mercariCrawlSettings)
-    .set({
-      keyword: data.keyword,
-      categoryId: data.categoryId,
-      minPrice: data.minPrice,
-      maxPrice: data.maxPrice,
-      enabled: data.enabled,
-      updatedAt: new Date().toISOString(),
-    })
+    .set(updateData)
     .where(eq(mercariCrawlSettings.productId, productId))
     .returning();
 

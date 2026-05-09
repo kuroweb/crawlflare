@@ -183,7 +183,6 @@ export const productsPutHandler: RouteHandler<
       mercariSettings: input.mercariSettings
         ? {
             ...input.mercariSettings,
-            categoryId: input.mercariSettings.categoryId ?? undefined,
           }
         : undefined,
     });
